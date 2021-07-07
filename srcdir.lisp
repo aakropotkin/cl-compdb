@@ -1,6 +1,5 @@
 
-(defpackage :compdb/srcdir
-  (:USE
+(defpackage :compdb/srcdir (:USE
    :common-lisp
    :compdb/types
    :compdb/flag-collection)
@@ -96,10 +95,7 @@
   (declare (type srcdir csd))
   (declare (type cunit cu))
   (setf (slot-value cu 'local-flags)
-        (mk-flag-collection-json
-         (set-difference (flag-collection-all-flags (cunit-flags cu))
-                         (flag-collection-all-flags (srcdir-flags csd))
-                         :TEST #'equal))))
+        (flag-collection-difference (cunit-flags cu) (srcdir-flags csd))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -107,7 +103,8 @@
 (defun srcdir-update-dir-flags (csd cu)
   (declare (type srcdir csd))
   (declare (type cunit cu))
-  ())
+  ;; FIXME
+  NIL)
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -115,7 +112,8 @@
 (defun srcdir-update-cus-flags (csd)
   (declare (type srcdir csd))
   (declare (type cunit cu))
-  ())
+  ;; FIXME
+  NIL)
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -126,7 +124,9 @@
                   (set-cu-flags     NIL))
   (declare (type srcdir csd))
   (declare (type cunit cu))
-  (declare (type boolean update-dir-flags update-cus-flags set-cu-flags)))
+  (declare (type boolean update-dir-flags update-cus-flags set-cu-flags))
+  ;; FIXME
+  NIL)
 
 
 ;; -------------------------------------------------------------------------- ;;
