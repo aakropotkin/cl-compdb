@@ -22,14 +22,15 @@
    #:mk-flag-collection-json
 
    #:flag-collection-uncategorized-flags
+   #:flag-collection-intersect
+   #:flag-collection-difference
+   #:flag-collection-union
    ))
 
 (in-package :compdb/flag-collection)
 
 
 ;; ========================================================================== ;;
-
-;; -------------------------------------------------------------------------- ;;
 
 (defstruct flag-collection
   (all-flags NIL :TYPE (or list-of-flags null))
@@ -74,6 +75,42 @@
                 (flag-collection-cxx-flags fc)
                 (flag-collection-def-flags fc)
                 (flag-collection-inc-flags fc))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun flag-collection-union (a b)
+  (declare (type flag-collection a b))
+  (make-flag-collection
+   :ALL-FLAGS (union a b :TEST #'equal)
+   :CC-FLAGS  (union a b :TEST #'equal)
+   :CXX-FLAGS (union a b :TEST #'equal)
+   :DEF-FLAGS (union a b :TEST #'equal)
+   :INC-FLAGS (union a b :TEST #'equal)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun flag-collection-intersect (a b)
+  (declare (type flag-collection a b))
+  (make-flag-collection
+   :ALL-FLAGS (intersection a b :TEST #'equal)
+   :CC-FLAGS  (intersection a b :TEST #'equal)
+   :CXX-FLAGS (intersection a b :TEST #'equal)
+   :DEF-FLAGS (intersection a b :TEST #'equal)
+   :INC-FLAGS (intersection a b :TEST #'equal)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun flag-collection-difference (a b)
+  (declare (type flag-collection a b))
+  (make-flag-collection
+   :ALL-FLAGS (set-difference a b :TEST #'equal)
+   :CC-FLAGS  (set-difference a b :TEST #'equal)
+   :CXX-FLAGS (set-difference a b :TEST #'equal)
+   :DEF-FLAGS (set-difference a b :TEST #'equal)
+   :INC-FLAGS (set-difference a b :TEST #'equal)))
 
 
 ;; -------------------------------------------------------------------------- ;;
