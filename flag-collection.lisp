@@ -20,6 +20,8 @@
    #:flag-collection-def-flags
    #:flag-collection-inc-flags
    #:mk-flag-collection-json
+
+   #:flag-collection-uncategorized-flags
    ))
 
 (in-package :compdb/flag-collection)
@@ -60,6 +62,18 @@
      :DEF-FLAGS defs
      :INC-FLAGS (or fixincs incs)
      )))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun flag-collection-uncategorized-flags (fc)
+  (declare (type flag-collection fc))
+  (reduce (lambda (a b) (set-difference a b :TEST #'equal))
+          (list (flag-collection-all-flags fc)
+                (flag-collection-cc-flags  fc)
+                (flag-collection-cxx-flags fc)
+                (flag-collection-def-flags fc)
+                (flag-collection-inc-flags fc))))
 
 
 ;; -------------------------------------------------------------------------- ;;

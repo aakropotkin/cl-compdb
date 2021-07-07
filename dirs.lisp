@@ -33,7 +33,7 @@
 
    #:subpath-p
    #:any-subpath-p
-   #:get-pathnames-roots
+   #:get-paths-roots
    ))
 
 (in-package :compdb/dirs)
@@ -106,7 +106,7 @@
   (or (directory-component-p x)
       (directory-pathname-p x)
       (and (stringp x)
-           (let ((p (parse-namestring x :JUNK-ALLOWED T)))
+           (let ((p (parse-namestring x)))
              (and (not (null p))
                   (directory-pathname-p p))))))
 
@@ -130,7 +130,9 @@
   (or (pathnamep x)
       (dirpath-p x)
       (and (stringp x)
-           (not (null (parse-namestring x :JUNK-ALLOWED T))))))
+           ;; This is a bit goofy honestly because it's incredibly hard to
+           ;; make an invalid pathname.
+           (not (null (parse-namestring x))))))
 
 (deftype path ()
   `(satisfies path-p))
@@ -215,7 +217,7 @@
   (some (lambda (d) (subpath-p d sub)) dirs))
 
 
-(defun get-pathnames-roots (paths)
+(defun get-paths-roots (paths)
   (declare (type list-of-paths paths))
   (let* ((dir-comps  (remove-duplicates (mapcar #'as-directory-component
                                                 paths)))

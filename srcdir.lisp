@@ -2,24 +2,23 @@
 (defpackage :compdb/srcdir
   (:USE
    :common-lisp
-   :compdb/types)
+   :compdb/types
+   :compdb/flag-collection)
   (:IMPORT-FROM :compdb/lang-tag        #:list-of-lang-tags)
   (:IMPORT-FROM :compdb/cunit           #:cunit
                                         #:list-of-cunits
                                         #:cunit-srcpath-equal-p)
-  (:IMPORT-FROM :compdb/flag-collection #:flag-collection)
   (:IMPORT-FROM :compdb/dirs            #:subpath-p)
   (:IMPORT-FROM :uiop                   #:pathname-equal)
   (:EXPORT
    #:srcdir
    #:srcdir-p
    #:make-srcdir
-   ;;#:srcdir-cdb
    #:srcdir-dirpath
    #:srcdir-parent-dir
    #:srcdir-sources
    #:srcdir-flags
-   ;;#:srcdir-local-flags
+   #:srcdir-local-flags
    #:srcdir-languages
    #:srcdir-compilers
    #:srcdir-child-dirs
@@ -42,12 +41,11 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defstruct srcdir
-  ;;(cdb         NIL   :TYPE (or compdb null))
   (dirpath     #P"/" :TYPE pathname)
   (parent-dir  NIL   :TYPE (or srcdir null))
   (sources     '()   :TYPE list-of-cunits)
   (flags       NIL   :TYPE (or flag-collection null))
-  ;;(local-flags NIL   :TYPE (or flag-collection null))
+  (local-flags NIL   :TYPE (or flag-collection null))
   (languages   '()   :TYPE list-of-lang-tags)
   (compilers   '()   :TYPE list-of-strings)
   (child-dirs  '()   :TYPE list-of-srcdirs))
@@ -90,6 +88,45 @@
       (let ((d (srcdir-lookup-srcdir csd path)))
         (find path (srcdir-sources d)
               :TEST (lambda (p s) (cunit-srcpath-equal-p s p))))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun srcdir-set-cu-flags (csd cu)
+  (declare (type srcdir csd))
+  (declare (type cunit cu))
+  (setf (slot-value cu 'local-flags)
+        (mk-flag-collection-json
+         (set-difference (flag-collection-all-flags (cunit-flags cu))
+                         (flag-collection-all-flags (srcdir-flags csd))
+                         :TEST #'equal))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun srcdir-update-dir-flags (csd cu)
+  (declare (type srcdir csd))
+  (declare (type cunit cu))
+  ())
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun srcdir-update-cus-flags (csd)
+  (declare (type srcdir csd))
+  (declare (type cunit cu))
+  ())
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun srcdir-add-cuint
+    (csd cu :&key (update-dir-flags NIL)
+                  (update-cus-flags NIL)
+                  (set-cu-flags     NIL))
+  (declare (type srcdir csd))
+  (declare (type cunit cu))
+  (declare (type boolean update-dir-flags update-cus-flags set-cu-flags)))
 
 
 ;; -------------------------------------------------------------------------- ;;

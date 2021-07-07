@@ -11,11 +11,9 @@
                                         #:get-jcu-output
                                         #:get-jcu-build-dir)
   (:IMPORT-FROM :compdb/dirs            #:subpath-p
-                                        #:get-pathnames-roots)
-  (:IMPORT-FROM :uiop                   #:pathname-equal
-                                        #:pathname-directory-pathname
-                                        #:parse-unix-namestring
-                                        #:unix-namestring)
+                                        #:as-pathname
+                                        #:get-paths-roots)
+  (:IMPORT-FROM :uiop                   #:pathname-directory-pathname)
   (:EXPORT
    #:compdb
    #:compdb-p
@@ -38,10 +36,10 @@
 
 (defstruct compdb
   (json-obj     '()   :TYPE list)
-  (dbfile       #P"/" :TYPE pathname)
+  (dbfile       #P"/" :TYPE path)
   (src-roots    '()   :TYPE list-of-srcdirs)
-  (obj-roots    '()   :TYPE list-of-pathnames)
-  (build-roots  '()   :TYPE list-of-pathnames)
+  (obj-roots    '()   :TYPE list-of-dirpaths)
+  (build-roots  '()   :TYPE list-of-dirpaths)
   (languages    '()   :TYPE list-of-lang-tags)
   (compilers    '()   :TYPE list-of-strings)
   (global-flags NIL   :TYPE (or flag-collection null)))
@@ -49,21 +47,25 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun mk-compdb (cdb-path)
-  (declare (type (or pathname string) cdb-path))
-  (let* ((jcdb (parse-compdb-json (if (stringp cdb-path) cdb-path
-                                      (uiop:unix-namestring cdb-path))))
+  (declare (type pathname cdb-path))
+  (let* ((jcdb (parse-compdb-json cdb-path))
          (srcdirs (remove-duplicates (mapcar #'get-jcu-src-dir jcdb)))
+         (srcroots (get-paths-roots srcdirs))
          (objdirs (remove-duplicates (mapcar #'uiop:pathname-directory-pathname
                                              (mapcar #'get-jcu-output jcdb))))
          (builddirs (remove-duplicates (mapcar #'get-jcu-build-dir jcdb))))
     (make-compdb
      :JSON-OBJ    jcdb
-     :DBFILE      (if (stringp cdb-path) (uiop:parse-unix-namestring cdb-path)
-                      cdb-path)
-     :SRC-ROOTS   (get-dirs-roots srcdirs)
-     :OBJ-ROOTS   (get-dirs-roots objdirs)
-     :BUILD-ROOTS (get-dirs-roots builddirs)
+     :DBFILE      (as-pathname cdb-path)
+     :SRC-ROOTS   (get-paths-roots srcdirs)
+     :OBJ-ROOTS   (get-paths-roots objdirs)
+     :BUILD-ROOTS (get-paths-roots builddirs)
      )))
 
 
