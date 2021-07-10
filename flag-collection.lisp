@@ -18,33 +18,51 @@
    #:flag-set-kind
    #:flag-set-flags
 
+   #:flag-set-has-kind-p
+   #:flag-set-inc-p
+   #:flag-set-def-p
+   #:flag-set-comp-p
+   #:flag-set-other-p
+
    #:list-of-flag-sets-p
    #:list-of-flag-sets
+
+    ;; ---------------------------------------------------------------------- ;;
 
    #:lang-flag-set
    #:lang-flag-set-p
    #:lang-flag-set-ltag
    #:lang-flag-set-flag-sets
 
+   #:lfs-flag-sets
+
+   #:lang-flag-set-has-lang-p
+   #:lfs-has-lang-p
+   #:lang-flag-set-cc-p
+   #:lfs-ccp
+   #:lang-flag-set-cxx-p
+   #:lfs-cxxp
+
+   #:lang-flag-set-get-all
+   #:lfs-get-all
+   #:lang-flag-set-has-kind-p
+   #:lfs-has-kind-p
+
+   #:lang-flag-set-get-kind
+   #:lfs-get-kind
+   #:lang-flag-set-get-inc
+   #:lfs-get-inc
+   #:lang-flag-set-get-def
+   #:lfs-get-def
+   #:lang-flag-set-get-comp
+   #:lfs-get-comp
+   #:lang-flag-set-get-other
+   #:lfs-get-other
+
    #:list-of-lang-flag-sets-p
    #:list-of-lang-flag-sets
 
    #:mk-lang-flag-set
-
-   ;;#:flag-collection
-   ;;#:flag-collection-p
-   ;;#:make-flag-collection
-   ;;#:flag-collection-all-flags
-   ;;#:flag-collection-cc-flags
-   ;;#:flag-collection-cxx-flags
-   ;;#:flag-collection-def-flags
-   ;;#:flag-collection-inc-flags
-   ;;#:mk-flag-collection-json
-
-   ;;#:flag-collection-uncategorized-flags
-   ;;#:flag-collection-intersect
-   ;;#:flag-collection-difference
-   ;;#:flag-collection-union
    ))
 
 (in-package :compdb/flag-collection)
@@ -108,25 +126,6 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun lang-flag-set-has-fs-kind (lsf kind)
-  (declare (type lang-flag-set lsf))
-  (declare (type flag-set-kind kind))
-  (any (lambda (fs) (flag-set-has-kind-p fs kind))
-       (lang-flag-set-flag-sets lsf)))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun lang-flag-set-get-fs-kind (lsf kind)
-  (declare (type lang-flag-set lsf))
-  (declare (type flag-set-kind kind))
-  (find-if (lambda (fs) (flag-set-has-kind-p fs kind))
-           (lang-flag-set-flag-sets lsf)))
-
-
-
-;; -------------------------------------------------------------------------- ;;
-
 (defun lang-flag-set-has-lang-p (lfs ltag)
   (declare (type lang-flag-set lfs))
   (declare (type lang-tag ltag))
@@ -171,6 +170,18 @@
 
 (defmacro lfs-get-kind (lfs kind)
   (list 'lang-flag-set-get-kind lfs kind))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun lang-flag-set-has-kind-p (lsf kind)
+  (declare (type lang-flag-set lsf))
+  (declare (type flag-set-kind kind))
+  (any (lambda (fs) (flag-set-has-kind-p fs kind))
+       (lang-flag-set-flag-sets lsf)))
+
+(defmacro lfs-has-kind-p (lfs kind)
+  (list 'lang-flag-set-has-kind lfs kind))
 
 
 ;; -------------------------------------------------------------------------- ;;
