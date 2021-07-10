@@ -41,8 +41,8 @@
   (dirpath     #P"/" :TYPE pathname)
   (parent-dir  NIL   :TYPE (or srcdir null))
   (sources     '()   :TYPE list-of-cunits)
-  (flags       NIL   :TYPE (or flag-collection null))
-  (local-flags NIL   :TYPE (or flag-collection null))
+  ;;(flags       NIL   :TYPE (or flag-collection null))
+  (flags       NIL   :TYPE (or lang-flag-set null))
   (languages   '()   :TYPE list-of-lang-tags)
   (compilers   '()   :TYPE list-of-strings)
   (child-dirs  '()   :TYPE list-of-srcdirs))
@@ -89,11 +89,11 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun srcdir-set-cu-flags (csd cu)
-  (declare (type srcdir csd))
-  (declare (type cunit cu))
-  (setf (slot-value cu 'local-flags)
-        (flag-collection-difference (cunit-flags cu) (srcdir-local-flags csd))))
+;;(defun srcdir-set-cu-flags (csd cu)
+;;  (declare (type srcdir csd))
+;;  (declare (type cunit cu))
+;;  (setf (slot-value cu 'local-flags)
+;;        (flag-collection-difference (cunit-flags cu) (srcdir-local-flags csd))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -118,15 +118,13 @@
 (defun srcdir-update-dir-flags (csd cu)
   (declare (type srcdir csd))
   (declare (type cunit cu))
-  (let* ((sd-l-flags (srcdir-local-flags csd))
-         (sd-flags   (srcdir-flags csd))
-         (cu-flags   (cunit-flags cu))
-         (l-isect    (flag-collection-intersect sd-l-flags cu-flags))
-         (l-sc-diff  )
-         )
-    (cond
-      (()))
-    ))
+  ;;(let* ((sd-l-flags (srcdir-local-flags csd))
+  ;;       (sd-flags   (srcdir-flags csd))
+  ;;       (cu-flags   (cunit-flags cu))
+  ;;       (l-isect    (flag-collection-intersect sd-l-flags cu-flags))
+  ;;       (l-sc-diff  )
+  ;;       ))
+  NIL)
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -140,15 +138,15 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun srcdir-add-cuint
-    (csd cu :&key (update-dir-flags NIL)
-                  (update-cus-flags NIL)
-                  (set-cu-flags     NIL))
-  (declare (type srcdir csd))
-  (declare (type cunit cu))
-  (declare (type boolean update-dir-flags update-cus-flags set-cu-flags))
-  ;; FIXME
-  NIL)
+;;(defun srcdir-add-cunit
+;;    (csd cu :&key (update-dir-flags NIL)
+;;                  (update-cus-flags NIL)
+;;                  (set-cu-flags     NIL))
+;;  (declare (type srcdir csd))
+;;  (declare (type cunit cu))
+;;  (declare (type boolean update-dir-flags update-cus-flags set-cu-flags))
+;;  ;; FIXME
+;;  NIL)
 
 
 ;; -------------------------------------------------------------------------- ;;

@@ -4,7 +4,9 @@
    :common-lisp
    :compdb/types)
   (:IMPORT-FROM :compdb/flags           #:list-of-flags)
-  (:IMPORT-FROM :compdb/flag-collection #:mk-flag-collection-json)
+  ;;(:IMPORT-FROM :compdb/flag-collection #:mk-flag-collection-json)
+  (:IMPORT-FROM :compdb/flag-collection #:mk-lang-flag-set
+                                        #:lang-flag-set)
   (:IMPORT-FROM :compdb/lang-tag        #:lang-tag
                                         #:gen-lang-tag-p)
   (:IMPORT-FROM :uiop                   #:pathname-equal)
@@ -52,8 +54,10 @@
   (language     :CC   :TYPE lang-tag)
   (compiler     "cc"  :TYPE string)
   (is-generated NIL   :TYPE boolean)
-  (flags        NIL   :TYPE (or flag-collection null))
-  (local-flags  NIL   :TYPE (or flag-collection null)))
+  (flags        NIL   :TYPE (or lang-flag-set null))
+  ;;(flags        NIL   :TYPE (or flag-collection null))
+  ;;(local-flags  NIL   :TYPE (or flag-collection null))
+  )
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -80,7 +84,9 @@
   (declare (type cons j))
   (let* ((compiler     (get-jcu-compiler j))
          (ltag         (get-jcu-lang-tag j))
-         (all-flags    (mk-flag-collection-json j :LANG-TAG ltag)))
+         ;;(all-flags    (mk-flag-collection-json j :LANG-TAG ltag))
+         (all-flags    (mk-lang-flag-set j :LANG-TAG ltag))
+         )
     (make-cunit
      :JSON-OBJ     j
      :SRCPATH      (get-jcu-src j)

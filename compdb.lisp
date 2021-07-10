@@ -5,7 +5,8 @@
    :compdb/types)
   (:IMPORT-FROM :compdb/lang-tag        #:list-of-lang-tags)
   (:IMPORT-FROM :compdb/srcdir          #:list-of-srcdirs)
-  (:IMPORT-FROM :compdb/flag-collection #:flag-collection)
+  ;;(:IMPORT-FROM :compdb/flag-collection #:flag-collection)
+  (:IMPORT-FROM :compdb/flag-collection #:lang-flag-set)
   (:IMPORT-FROM :compdb/json-cdb        #:parse-compdb-json
                                         #:get-jcu-src-dir
                                         #:get-jcu-output
@@ -42,7 +43,8 @@
   (build-roots  '()   :TYPE list-of-dirpaths)
   (languages    '()   :TYPE list-of-lang-tags)
   (compilers    '()   :TYPE list-of-strings)
-  (global-flags NIL   :TYPE (or flag-collection null)))
+  ;;(global-flags NIL   :TYPE (or flag-collection null))
+  (global-flags NIL   :TYPE (or lang-flag-set null)))
 
 
 ;; -------------------------------------------------------------------------- ;;

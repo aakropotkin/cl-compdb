@@ -29,20 +29,22 @@
    #:list-of-lang-flag-sets-p
    #:list-of-lang-flag-sets
 
-   #:flag-collection
-   #:flag-collection-p
-   #:make-flag-collection
-   #:flag-collection-all-flags
-   #:flag-collection-cc-flags
-   #:flag-collection-cxx-flags
-   #:flag-collection-def-flags
-   #:flag-collection-inc-flags
-   #:mk-flag-collection-json
+   #:mk-lang-flag-set
 
-   #:flag-collection-uncategorized-flags
-   #:flag-collection-intersect
-   #:flag-collection-difference
-   #:flag-collection-union
+   ;;#:flag-collection
+   ;;#:flag-collection-p
+   ;;#:make-flag-collection
+   ;;#:flag-collection-all-flags
+   ;;#:flag-collection-cc-flags
+   ;;#:flag-collection-cxx-flags
+   ;;#:flag-collection-def-flags
+   ;;#:flag-collection-inc-flags
+   ;;#:mk-flag-collection-json
+
+   ;;#:flag-collection-uncategorized-flags
+   ;;#:flag-collection-intersect
+   ;;#:flag-collection-difference
+   ;;#:flag-collection-union
    ))
 
 (in-package :compdb/flag-collection)
