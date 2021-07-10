@@ -8,6 +8,19 @@
   (:IMPORT-FROM :compdb/dirs         #:join-pathnames)
   (:IMPORT-FROM :str                 #:starts-with-p)
   (:EXPORT
+   #:flag-pair-p
+   #:flag-pair
+
+   #:flag-p
+   #:flag
+   #:list-of-flags-p
+   #:list-of-flags
+
+   #:scoped-flag-p
+   #:scoped-flag
+   #:list-of-scoped-flags-p
+   #:list-of-scoped-flags
+
    #:spaceless-opt-arg-p
    #:inc-flag-p
    #:fixup-inc-flag-pair
@@ -21,6 +34,38 @@
 
 
 ;; ========================================================================== ;;
+
+(defun flag-pair-p (x)
+  (and (consp x)
+       (stringp (car x))
+       (or (stringp (cdr x))
+           (path (cdr x)))))
+
+(deftype flag-pair ()
+  `(satisfies flag-pair-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun flag-p (x)
+  (or (stringp x)
+      (flag-pair-p x)))
+
+(deftype flag ()
+  `(satisfies flag-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun list-of-flags-p (x)
+  (and (listp x)
+       (every #'flag-p x)))
+
+(deftype list-of-flags ()
+  `(satisfies list-of-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
 
 (defparameter *spaceless-opt-args*
   (list "-I" "-D" "-l" "-L" "-z" "-u" "-U" "-B" "-W" "-g" "-O"))
@@ -67,8 +112,12 @@
   "Given a `(FLAG . RELATIVE-DIR)' pair, make directory absolute
 using `builddir' as the parent directory."
   (declare (type pathnamep builddir))
-  (declare (type flag-pair fpair))
-  (cons (car fpair) (join-pathnames builddir (cdr fpair))))
+  (declare (type (or flag-pair scoped-flag) fpair))
+  (let ((new-pair (cons (car fpair) (join-pathnames builddir
+                                                    (cdr (as-flag fpair))))))
+    (if (scoped-flag-p fpair)
+        (make-scoped-flag :LOCAL (scoped-flag-local-p fpair) :FLAG  new-pair)
+        new-pair)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -153,6 +202,41 @@ using `builddir' as the parent directory."
                              :TEST (lambda (f o) (str:starts-with-p o f)))))
               (if (null opt) NIL  ;; This shouldn't happen
                   (cons opt (subseq f (length opt) (length f)))))))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defstruct scoped-flag
+  (local NIL boolean)
+  (flag  NIL flag))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flag-local-p (sf)
+  (declare (type scoped-flag sf))
+  (scoped-flag-local sf))
+
+(defun scoped-flag-common-p (sf)
+  (not (scoped-flag-local-p sf)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun list-of-scoped-flags-p (x)
+  (and (listp x)
+       (every #'scoped-flag-p x)))
+
+(deftype list-of-scoped-flags ()
+  `(satisfies list-of-scoped-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun as-flag (x)
+  (declare (type (or flag scoped-flag)))
+  (typecase x (flag         x)
+              (scoped-flag  (scoped-flag-flag x))))
 
 
 ;; -------------------------------------------------------------------------- ;;

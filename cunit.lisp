@@ -6,7 +6,7 @@
   (:IMPORT-FROM :compdb/flags           #:list-of-flags)
   (:IMPORT-FROM :compdb/flag-collection #:mk-flag-collection-json)
   (:IMPORT-FROM :compdb/lang-tag        #:lang-tag
-                                        #:generated-lang-p)
+                                        #:gen-lang-tag-p)
   (:IMPORT-FROM :uiop                   #:pathname-equal)
   (:IMPORT-FROM :compdb/json-cdb        #:get-jcu-compiler
                                         #:get-jcu-lang-tag
@@ -80,22 +80,16 @@
   (declare (type cons j))
   (let* ((compiler     (get-jcu-compiler j))
          (ltag         (get-jcu-lang-tag j))
-         (all-flags    (mk-flag-collection-json j :LANG-TAG ltag))
-         ;;(local-flags  (if (null src-flags) NIL
-         ;;                  (mk-flag-collection-json
-         ;;                   (set-difference j src-flags :TEST #'equal)
-         ;;                   :LANG-TAG ltag)))
-         )
+         (all-flags    (mk-flag-collection-json j :LANG-TAG ltag)))
     (make-cunit
      :JSON-OBJ     j
      :SRCPATH      (get-jcu-src j)
      :OUTPUT       (get-jcu-output j)
      :LANGUAGE     ltag
      :COMPILER     compiler
-     :IS-GENERATED (generated-lang-p ltag)
+     :IS-GENERATED (gen-lang-tag-p ltag)
      :FLAGS        all-flags
-     :LOCAL-FLAGS  NIL
-     )))
+     :LOCAL-FLAGS  NIL)))
 
 
 ;; -------------------------------------------------------------------------- ;;

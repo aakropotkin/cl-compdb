@@ -6,11 +6,14 @@
   (:EXPORT
    #:lang-tag-p
    #:lang-tag
+   #:c-lang-tag-p
+   #:c-lang-tag
+   #:gen-lang-tag-p
+   #:gen-lang-tag
    #:list-of-lang-tags-p
    #:list-of-lang-tags
    #:lang-tag-from-flags
    #:lang-tag-from-compiler
-   #:generated-lang-p
    ))
 
 (in-package :compdb/lang-tag)
@@ -19,7 +22,7 @@
 ;; ========================================================================== ;;
 
 (defun lang-tag-p (x)
-  (member x (list :CC :CXX :YACC :LEX)))
+  (member x (list :CC :CXX :YACC :LEX :OTHER)))
 
 (deftype lang-tag ()
   `(satisfies lang-tag-p))
@@ -27,9 +30,27 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun c-lang-tag-p (x)
+  (member x (list :CC :CXX)))
+
+(deftype c-lang-tag ()
+  `(satisfies c-lang-tag-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun gen-lang-p (ltag)
+  (member x (list :YACC :LEX)))
+
+(deftype gen-lang-tag ()
+  `(satisfies gen-lang-tag-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun list-of-lang-tags-p (lst)
   (and (listp lst)
-       (every (lambda (x) (typep x 'lang-tag)) lst)))
+       (every #'lang-tag-p lst)))
 
 (deftype list-of-lang-tags ()
   `(satisfies list-of-lang-tags-p))
@@ -55,13 +76,6 @@
           ((find c '("g++" "clang++")          :TEST #'equal) :CXX)
           ((find c '("yacc" "bison")           :TEST #'equal) :YACC)
           ((find c '("lex" "flex")             :TEST #'equal) :LEX))))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun generated-lang-p (ltag)
-  (declare (type lang-tag ltag))
-  (if (member ltag '(:YACC :LEX)) T NIL))
 
 
 ;; -------------------------------------------------------------------------- ;;

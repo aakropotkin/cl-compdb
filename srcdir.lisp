@@ -36,9 +36,7 @@
 ;; Forward Declare
 (declaim (type compdb))
 
-
 ;; -------------------------------------------------------------------------- ;;
-
 (defstruct srcdir
   (dirpath     #P"/" :TYPE pathname)
   (parent-dir  NIL   :TYPE (or srcdir null))
@@ -95,16 +93,40 @@
   (declare (type srcdir csd))
   (declare (type cunit cu))
   (setf (slot-value cu 'local-flags)
-        (flag-collection-difference (cunit-flags cu) (srcdir-flags csd))))
+        (flag-collection-difference (cunit-flags cu) (srcdir-local-flags csd))))
 
 
+;; -------------------------------------------------------------------------- ;;
+;;
+;; When adding a single compilation unit we have a few cases:
+;;
+;; 1. The CU has the same flags as every other sibling. Do Nothing.
+;; 2. The CU is a different language as other siblings. ???
+;; 3. The CU is missing flags that were common among siblings.
+;;    Remove flag from `srcdir' and add it back to all siblings.
+;;    If the `srcdir' has child directories add the flag to child directories
+;;    as well.
+;; 4. The CU is missing flags that were common among CC or CXX siblings.
+;;    Basically the same as (3), but don't worry about siblings for different
+;;    languages.
+;; 5. The CU has flags that other siblings lack, same as (1), but if you have a
+;;    mechanism to explicitly track individual files with "unique" flags
+;;    ( perhaps for `automake' builds using `libtool' ) be sure to "mark" it.
+;;
 ;; -------------------------------------------------------------------------- ;;
 
 (defun srcdir-update-dir-flags (csd cu)
   (declare (type srcdir csd))
   (declare (type cunit cu))
-  ;; FIXME
-  NIL)
+  (let* ((sd-l-flags (srcdir-local-flags csd))
+         (sd-flags   (srcdir-flags csd))
+         (cu-flags   (cunit-flags cu))
+         (l-isect    (flag-collection-intersect sd-l-flags cu-flags))
+         (l-sc-diff  )
+         )
+    (cond
+      (()))
+    ))
 
 
 ;; -------------------------------------------------------------------------- ;;
