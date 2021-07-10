@@ -28,6 +28,12 @@
    #:join-opt-args
    #:def-flag-p
    #:split-spaceless-flag-arg
+
+   #:scoped-flag-local-p
+   #:scoped-flag-common-p
+   #:as-flag
+   #:scoped-flag-mark-scope
+   #:scoped-flags-mark-scopes
    ))
 
 (in-package :compdb/flags)
@@ -243,6 +249,26 @@ using `builddir' as the parent directory."
   (declare (type (or flag scoped-flag)))
   (typecase x (flag         x)
               (scoped-flag  (scoped-flag-flag x))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flag-mark-scope (common-sflags sf)
+  "The ``scope'' of flags in `common-flags' is actually irrelevant, since they
+represent a hierarchy of ownership.
+Local flags should be those that are not in any ancestors."
+  (declare (type list-of-scoped-flags common-sflags))
+  (declare (type scoped-flag sf))
+  (setf (scoped-flag-local sf)
+        (null (find (scoped-flag-flag sf) common-sflags :KEY  #'scoped-flag-flag
+                                                        :TEST #'equal))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flags-mark-scopes (common-sflags sflags)
+  (declare (type list-of-scoped-flags common-sflags sflags))
+  (mapc (lambda (sf) (scoped-flag-mark-scope common-sflags sf)) sflags))
 
 
 ;; -------------------------------------------------------------------------- ;;

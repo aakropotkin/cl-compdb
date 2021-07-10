@@ -47,6 +47,8 @@
    #:lfs-get-all
    #:lang-flag-set-has-kind-p
    #:lfs-has-kind-p
+   #:lang-flag-set-kinds
+   #:lfs-kinds
 
    #:lang-flag-set-get-kind
    #:lfs-get-kind
@@ -86,6 +88,16 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun list-of-flag-sets-p (x)
+  (and (listp x)
+       (every #'flag-set-p x)))
+
+(deftype list-of-flag-sets ()
+  `(satisfies list-of-flag-sets-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun flag-set-has-kind-p (fs kind)
   (declare (type flag-set fs))
   (declare (type flag-set-kind kind))
@@ -102,16 +114,6 @@
 
 (defun flag-set-other-p (fs)
   (flag-set-has-kind-p fs :OTHER))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-flag-sets-p (x)
-  (and (listp x)
-       (every #'flag-set-p x)))
-
-(deftype list-of-flag-sets ()
-  `(satisfies list-of-flag-sets-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -174,14 +176,21 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun lang-flag-set-has-kind-p (lsf kind)
-  (declare (type lang-flag-set lsf))
+(defun lang-flag-set-has-kind-p (lfs kind)
+  (declare (type lang-flag-set lfs))
   (declare (type flag-set-kind kind))
   (any (lambda (fs) (flag-set-has-kind-p fs kind))
-       (lang-flag-set-flag-sets lsf)))
+       (lang-flag-set-flag-sets lfs)))
 
 (defmacro lfs-has-kind-p (lfs kind)
   (list 'lang-flag-set-has-kind lfs kind))
+
+
+(defun lang-flag-set-kinds (lfs)
+  (mapcar #'flag-set-kind (lang-flag-set-flag-sets lfs)))
+
+(defmacro lfs-kinds (lfs)
+  (list 'lang-flag-set-kinds lfs))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -270,9 +279,10 @@
   (assert (equal (lang-flag-set-ltag a) (lang-flag-set-ltag b)))
   (let* ((fss-a    (flag-sets (lang-flag-set-flag-sets a)))
          (fss-b    (flag-sets (lang-flag-set-flag-sets b)))
-         (fs-kinds (remove-duplicates (append (mapcar #'flag-set-kind fss-a)
-                                              (mapcar #'flag-set-kind fss-b))))
-        )))
+         (fs-kinds (remove-duplicates
+                    (append (lfs-kinds fss-a) (lfs-kinds fss-b))))
+         )
+    ))
 
 
 
