@@ -207,8 +207,8 @@ using `builddir' as the parent directory."
 ;; -------------------------------------------------------------------------- ;;
 
 (defstruct scoped-flag
-  (local NIL boolean)
-  (flag  NIL flag))
+  (local NIL :TYPE boolean)
+  (flag  NIL :TYPE flag))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -219,6 +219,12 @@ using `builddir' as the parent directory."
 
 (defun scoped-flag-common-p (sf)
   (not (scoped-flag-local-p sf)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flag-equal-noscope-p (a b)
+  (equal (scoped-flag-flag a) (scoped-flag-flags b)))
 
 
 ;; -------------------------------------------------------------------------- ;;

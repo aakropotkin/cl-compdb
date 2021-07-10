@@ -63,6 +63,9 @@
   (kind  :OTHER :TYPE flag-set-kind)
   (flags '()    :TYPE list-of-scoped-flags))
 
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun flag-set-has-kind-p (fs kind)
   (declare (type flag-set fs))
   (declare (type flag-set-kind kind))
@@ -94,11 +97,30 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defstruct lang-flag-set
-  (ltag      NIL (or lang-tag null))
-  (flag-sets NIL (or list-of-flag-sets null)))
+  (ltag      NIL :TYPE (or lang-tag null))
+  (flag-sets NIL :TYPE (or list-of-flag-sets null)))
 
 (defmacro lfs-flag-sets (lfs)
   (list 'lang-flag-set-flag-sets lfs))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun lang-flag-set-has-fs-kind (lsf kind)
+  (declare (type lang-flag-set lsf))
+  (declare (type flag-set-kind kind))
+  (any (lambda (fs) (flag-set-has-kind-p fs kind))
+       (lang-flag-set-flag-sets lsf)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun lang-flag-set-get-fs-kind (lsf kind)
+  (declare (type lang-flag-set lsf))
+  (declare (type flag-set-kind kind))
+  (find-if (lambda (fs) (flag-set-has-kind-p fs kind))
+           (lang-flag-set-flag-sets lsf)))
+
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -228,128 +250,142 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun flag-collection-union (a b)
-  (declare (type flag-collection a b))
-  (make-flag-collection
-   :ALL-FLAGS (union a b :TEST #'equal)
-   :CC-FLAGS  (union a b :TEST #'equal)
-   :CXX-FLAGS (union a b :TEST #'equal)
-   :DEF-FLAGS (union a b :TEST #'equal)
-   :INC-FLAGS (union a b :TEST #'equal)))
+(defun lang-flag-set-union
+    (a b &key (ignore-scope T))
+  (declare (type lang-flag-set a b))
+  (declare (type boolean ignore-scope))
+  (assert (equal (lang-flag-set-ltag a) (lang-flag-set-ltag b)))
+  (let* ((fss-a    (flag-sets (lang-flag-set-flag-sets a)))
+         (fss-b    (flag-sets (lang-flag-set-flag-sets b)))
+         (fs-kinds (remove-duplicates (append (mapcar #'flag-set-kind fss-a)
+                                              (mapcar #'flag-set-kind fss-b))))
+        )))
+
+
+
+;; -------------------------------------------------------------------------- ;;
+;;(defun flag-collection-union (a b)
+;;  (declare (type flag-collection a b))
+;;  (make-flag-collection
+;;   :ALL-FLAGS (union a b :TEST #'equal)
+;;   :CC-FLAGS  (union a b :TEST #'equal)
+;;   :CXX-FLAGS (union a b :TEST #'equal)
+;;   :DEF-FLAGS (union a b :TEST #'equal)
+;;   :INC-FLAGS (union a b :TEST #'equal)))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun flag-collection-intersect (a b &key (ltag NIL))
-  "Remove members of `b' from `a'.
-when `ltag' is given and is `:CC' or `:CXX', only remove flags for the
-relevant language."
-  (declare (type flag-collection a b))
-  (declare (type (or lang-tag null) ltag))
-  (let* ((a-cc-flags (flag-collection-cc-flags a))
-         (b-cc-flags (if (or (null ltag) (equal ltag :CC))
-                         (flag-collection-cc-flags b)
-                         NIL))
-         (cc-flags   (if (or (null ltag) (equal ltag :CC))
-                         (intersection a-cc-flags b-cc-flags :TEST #'equal)
-                         a-cc-flags))
-
-         (a-cxx-flags (flag-collection-cxx-flags a))
-         (b-cxx-flags (if (or (null ltag) (equal ltag :CXX))
-                          (flag-collection-cxx-flags b)
-                          NIL))
-         (cxx-flags   (if (or (null ltag) (equal ltag :CXX))
-                         (intersection a-cxx-flags b-cxx-flags :TEST #'equal)
-                         a-cxx-flags))
-
-         (a-def-flags (flag-collection-def-flags a))
-         (b-def-flags (flag-collection-def-flags b))
-         (def-flags   (intersection a-cdef-flags b-def-flags) :TEST #'equal)
-
-         (a-inc-flags (flag-collection-inc-flags a))
-         (b-inc-flags (flag-collection-inc-flags b))
-         (inc-flags   (intersection a-cinc-flags b-inc-flags) :TEST #'equal)
-
-         (a-misc-flags (flag-collection-uncategorized-flags a))
-         (b-misc-flags (flag-collection-uncategorized-flags b))
-         (misc-flags   (intersection a-cmisc-flags b-misc-flags) :TEST #'equal)
-
-         (all-flags    (remove-duplicates (append cc-flags
-                                                  cxx-flags
-                                                  def-flags
-                                                  inc-flags
-                                                  misc-flags)
-                                          :TEST #'equal)))
-    (make-flag-collection :ALL-FLAGS all-flags
-                          :CC-FLAGS  cc-flags
-                          :CXX-FLAGS cxx-flags
-                          :DEF-FLAGS def-flags
-                          :INC-FLAGS inc-flags)))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun flag-collection-difference (a b &key (ltag NIL))
-  "Remove members of `b' from `a'.
-when `ltag' is given and is `:CC' or `:CXX', only remove flags for the
-relevant language."
-  (declare (type flag-collection a b))
-  (declare (type (or lang-tag null) ltag))
-  (let* ((a-cc-flags (flag-collection-cc-flags a))
-         (b-cc-flags (if (or (null ltag) (equal ltag :CC))
-                         (flag-collection-cc-flags b)
-                         NIL))
-         (cc-flags   (if (or (null ltag) (equal ltag :CC))
-                         (set-difference a-cc-flags b-cc-flags :TEST #'equal)
-                         a-cc-flags))
-
-         (a-cxx-flags (flag-collection-cxx-flags a))
-         (b-cxx-flags (if (or (null ltag) (equal ltag :CXX))
-                          (flag-collection-cxx-flags b)
-                          NIL))
-         (cxx-flags   (if (or (null ltag) (equal ltag :CXX))
-                         (set-difference a-cxx-flags b-cxx-flags :TEST #'equal)
-                         a-cxx-flags))
-
-         (a-def-flags (flag-collection-def-flags a))
-         (b-def-flags (flag-collection-def-flags b))
-         (def-flags   (set-difference a-cdef-flags b-def-flags) :TEST #'equal)
-
-         (a-inc-flags (flag-collection-inc-flags a))
-         (b-inc-flags (flag-collection-inc-flags b))
-         (inc-flags   (set-difference a-cinc-flags b-inc-flags) :TEST #'equal)
-
-         (all-flags    (set-difference (flag-collection-all-flags a)
-                                       (flag-collection-all-flags b)
-                                       :TEST #'equal)))
-    (make-flag-collection :ALL-FLAGS all-flags
-                          :CC-FLAGS  cc-flags
-                          :CXX-FLAGS cxx-flags
-                          :DEF-FLAGS def-flags
-                          :INC-FLAGS inc-flags)))
+;;(defun flag-collection-intersect (a b &key (ltag NIL))
+;;  "Remove members of `b' from `a'.
+;;when `ltag' is given and is `:CC' or `:CXX', only remove flags for the
+;;relevant language."
+;;  (declare (type flag-collection a b))
+;;  (declare (type (or lang-tag null) ltag))
+;;  (let* ((a-cc-flags (flag-collection-cc-flags a))
+;;         (b-cc-flags (if (or (null ltag) (equal ltag :CC))
+;;                         (flag-collection-cc-flags b)
+;;                         NIL))
+;;         (cc-flags   (if (or (null ltag) (equal ltag :CC))
+;;                         (intersection a-cc-flags b-cc-flags :TEST #'equal)
+;;                         a-cc-flags))
+;;
+;;         (a-cxx-flags (flag-collection-cxx-flags a))
+;;         (b-cxx-flags (if (or (null ltag) (equal ltag :CXX))
+;;                          (flag-collection-cxx-flags b)
+;;                          NIL))
+;;         (cxx-flags   (if (or (null ltag) (equal ltag :CXX))
+;;                         (intersection a-cxx-flags b-cxx-flags :TEST #'equal)
+;;                         a-cxx-flags))
+;;
+;;         (a-def-flags (flag-collection-def-flags a))
+;;         (b-def-flags (flag-collection-def-flags b))
+;;         (def-flags   (intersection a-cdef-flags b-def-flags) :TEST #'equal)
+;;
+;;         (a-inc-flags (flag-collection-inc-flags a))
+;;         (b-inc-flags (flag-collection-inc-flags b))
+;;         (inc-flags   (intersection a-cinc-flags b-inc-flags) :TEST #'equal)
+;;
+;;         (a-misc-flags (flag-collection-uncategorized-flags a))
+;;         (b-misc-flags (flag-collection-uncategorized-flags b))
+;;         (misc-flags   (intersection a-cmisc-flags b-misc-flags) :TEST #'equal)
+;;
+;;         (all-flags    (remove-duplicates (append cc-flags
+;;                                                  cxx-flags
+;;                                                  def-flags
+;;                                                  inc-flags
+;;                                                  misc-flags)
+;;                                          :TEST #'equal)))
+;;    (make-flag-collection :ALL-FLAGS all-flags
+;;                          :CC-FLAGS  cc-flags
+;;                          :CXX-FLAGS cxx-flags
+;;                          :DEF-FLAGS def-flags
+;;                          :INC-FLAGS inc-flags)))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun flag-collection-subset (a b &key (ltag NIL))
-  "All members in `b' are in `a'.
-When `ltag' is given and is `:CC' or `:CXX', only the relevant language will
-be checked."
-  (declare (type flag-collection a b))
-  (declare (type (or lang-tag null) ltag))
-  (and
-   (subsetp (flag-collection-inc-flags a)
-            (flag-collection-inc-flags b)
-            :TEST #'equal)
-   (subsetp (flag-collection-def-flags a)
-            (flag-collection-def-flags b)
-            :TEST #'equal)
-   ;; FIXME
-   )
-  (if (or (null ltag) (not (c-lang-tag-p ltag)))
-      ;;
-      )
-  )
+;;(defun flag-collection-difference (a b &key (ltag NIL))
+;;  "Remove members of `b' from `a'.
+;;when `ltag' is given and is `:CC' or `:CXX', only remove flags for the
+;;relevant language."
+;;  (declare (type flag-collection a b))
+;;  (declare (type (or lang-tag null) ltag))
+;;  (let* ((a-cc-flags (flag-collection-cc-flags a))
+;;         (b-cc-flags (if (or (null ltag) (equal ltag :CC))
+;;                         (flag-collection-cc-flags b)
+;;                         NIL))
+;;         (cc-flags   (if (or (null ltag) (equal ltag :CC))
+;;                         (set-difference a-cc-flags b-cc-flags :TEST #'equal)
+;;                         a-cc-flags))
+;;
+;;         (a-cxx-flags (flag-collection-cxx-flags a))
+;;         (b-cxx-flags (if (or (null ltag) (equal ltag :CXX))
+;;                          (flag-collection-cxx-flags b)
+;;                          NIL))
+;;         (cxx-flags   (if (or (null ltag) (equal ltag :CXX))
+;;                         (set-difference a-cxx-flags b-cxx-flags :TEST #'equal)
+;;                         a-cxx-flags))
+;;
+;;         (a-def-flags (flag-collection-def-flags a))
+;;         (b-def-flags (flag-collection-def-flags b))
+;;         (def-flags   (set-difference a-cdef-flags b-def-flags) :TEST #'equal)
+;;
+;;         (a-inc-flags (flag-collection-inc-flags a))
+;;         (b-inc-flags (flag-collection-inc-flags b))
+;;         (inc-flags   (set-difference a-cinc-flags b-inc-flags) :TEST #'equal)
+;;
+;;         (all-flags    (set-difference (flag-collection-all-flags a)
+;;                                       (flag-collection-all-flags b)
+;;                                       :TEST #'equal)))
+;;    (make-flag-collection :ALL-FLAGS all-flags
+;;                          :CC-FLAGS  cc-flags
+;;                          :CXX-FLAGS cxx-flags
+;;                          :DEF-FLAGS def-flags
+;;                          :INC-FLAGS inc-flags)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+;;(defun flag-collection-subset (a b &key (ltag NIL))
+;;  "All members in `b' are in `a'.
+;;When `ltag' is given and is `:CC' or `:CXX', only the relevant language will
+;;be checked."
+;;  (declare (type flag-collection a b))
+;;  (declare (type (or lang-tag null) ltag))
+;;  (and
+;;   (subsetp (flag-collection-inc-flags a)
+;;            (flag-collection-inc-flags b)
+;;            :TEST #'equal)
+;;   (subsetp (flag-collection-def-flags a)
+;;            (flag-collection-def-flags b)
+;;            :TEST #'equal)
+;;   ;; FIXME
+;;   )
+;;  (if (or (null ltag) (not (c-lang-tag-p ltag)))
+;;      ;;
+;;      )
+;;  )
 
 
 ;; -------------------------------------------------------------------------- ;;
