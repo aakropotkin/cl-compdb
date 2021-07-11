@@ -1,5 +1,7 @@
 
-(defpackage :compdb/srcdir (:USE
+(in-package :cl-user)
+(defpackage :compdb/srcdir
+  (:USE
    :common-lisp
    :compdb/types
    :compdb/flag-collection)

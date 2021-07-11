@@ -1,4 +1,5 @@
 
+(in-package :cl-user)
 (defpackage :compdb/struct-utils
   (:USE :common-lisp)
   (:EXPORT #:update-struct))

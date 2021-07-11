@@ -1,4 +1,5 @@
 
+(in-package :cl-user)
 (defpackage :compdb/dirs
   (:USE
    :common-lisp

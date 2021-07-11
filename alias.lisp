@@ -1,3 +1,5 @@
+
+(in-package :cl-user)
 (defpackage :compdb/alias
   (:USE :common-lisp)
   (:IMPORT-FROM :str          #:replace-first)

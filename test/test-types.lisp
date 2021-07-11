@@ -1,10 +1,7 @@
 
-(ql:quickload :PROVE)
-(ql:quickload :COMPDB/TYPES)
-
 (in-package :cl-user)
 (defpackage :compdb/test/test-types
-  (:USE :CL :PROVE :COMPDB/TYPES))
+  (:USE :common-lisp :prove :compdb/types))
 (in-package :compdb/test/test-types)
 
 
@@ -53,9 +50,9 @@
   (ok (not (flag-pair-p (cons #P"bar" "foo"))))
   (ok (not (flag-pair-p (cons "foo" 4))))
   (is-type (cons "foo" "bar") 'flag-pair)
-  (is-type (cons "foo" #"bar") 'flag-pair)
+  (is-type (cons "foo" #P"bar") 'flag-pair)
   (ok (typep (cons "foo" "bar") 'flag-pair))
-  (ok (typep (cons "foo" #"bar") 'flag-pair))
+  (ok (typep (cons "foo" #P"bar") 'flag-pair))
   (ok (not (typep (cons #P"bar" "foo") 'flag-pair)))
   (ok (not (typep (cons "foo" 4) 'flag-pair))))
 
