@@ -3,7 +3,8 @@
   (:USE
    :common-lisp
    :compdb/types
-   :compdb/flags)
+   :compdb/flags
+   :compdb/alias)
   (:IMPORT-FROM :compdb/json-cdb #:get-jcu-args
                                  #:get-jcu-compiler
                                  #:get-jcu-lang-tag)
@@ -198,9 +199,10 @@
 (defun lang-flag-set-get-inc (lfs)
   (lang-flag-set-get-kind lfs :INC))
 
-(defmacro lfs-get-inc (lfs)
-  (list 'lang-flag-set-get-inc lfs))
+(setf (symbol-function 'lfs-get-inc) #'lang-flag-set-get-inc)
 
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun lang-flag-set-get-def (lfs)
   (lang-flag-set-get-kind lfs :DEF))

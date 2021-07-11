@@ -84,7 +84,6 @@
   (declare (type cons j))
   (let* ((compiler     (get-jcu-compiler j))
          (ltag         (get-jcu-lang-tag j))
-         ;;(all-flags    (mk-flag-collection-json j :LANG-TAG ltag))
          (all-flags    (mk-lang-flag-set j :LANG-TAG ltag))
          )
     (make-cunit

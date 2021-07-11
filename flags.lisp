@@ -8,14 +8,6 @@
   (:IMPORT-FROM :compdb/dirs         #:join-pathnames)
   (:IMPORT-FROM :str                 #:starts-with-p)
   (:EXPORT
-   #:flag-pair-p
-   #:flag-pair
-
-   #:flag-p
-   #:flag
-   #:list-of-flags-p
-   #:list-of-flags
-
    #:scoped-flag-p
    #:scoped-flag
    #:list-of-scoped-flags-p
@@ -43,38 +35,6 @@
 
 
 ;; ========================================================================== ;;
-
-(defun flag-pair-p (x)
-  (and (consp x)
-       (stringp (car x))
-       (or (stringp (cdr x))
-           (path (cdr x)))))
-
-(deftype flag-pair ()
-  `(satisfies flag-pair-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun flag-p (x)
-  (or (stringp x)
-      (flag-pair-p x)))
-
-(deftype flag ()
-  `(satisfies flag-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-flags-p (x)
-  (and (listp x)
-       (every #'flag-p x)))
-
-(deftype list-of-flags ()
-  `(satisfies list-of-flags-p))
-
-
-;; -------------------------------------------------------------------------- ;;
 
 (defparameter *spaceless-opt-args*
   (list "-I" "-D" "-l" "-L" "-z" "-u" "-U" "-B" "-W" "-g" "-O"))

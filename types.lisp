@@ -13,7 +13,9 @@
    #:flag-p
    #:flag
    #:list-of-flags-p
-   #:list-of-flags))
+   #:list-of-flags
+   #:list-of-symbols-p
+   #:list-of-symbols))
 
 (in-package :compdb/types)
 
@@ -78,6 +80,16 @@
 
 (deftype list-of-flags ()
   `(satisfies list-of-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun list-of-symbols-p (x)
+  (and (listp x)
+       (every #'symbolp x)))
+
+(deftype list-of-symbols ()
+  `(satisfies list-of-symbols-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
