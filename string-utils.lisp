@@ -5,6 +5,7 @@
    :common-lisp
    :compdb/types)
   (:EXPORT
+   #:strs-equal
    #:strs-intersect
    #:strs-difference
    #:strs-union
@@ -16,6 +17,13 @@
 
 
 ;; ========================================================================== ;;
+
+(defun strs-equal (a b)
+  "Set equality for lists of strings."
+  (null (set-exclusive-or a b :TEST #'equal)))
+
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun strs-intersect (a b)
   (declare (type list-of-strings a b))
