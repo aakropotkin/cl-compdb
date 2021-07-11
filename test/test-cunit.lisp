@@ -1,8 +1,8 @@
 
 (in-package :cl-user)
-(defpackage :compdb/test/test-cunit.lisp
-  (:USE :common-lisp :prove :compdb/cunit.lisp))
-(in-package :compdb/test/test-cunit.lisp)
+(defpackage :compdb/test/test-cunit
+  (:USE :common-lisp :prove :compdb/cunit))
+(in-package :compdb/test/test-cunit)
 
 
 ;; ========================================================================== ;;

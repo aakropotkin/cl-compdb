@@ -1,8 +1,8 @@
 
 (in-package :cl-user)
-(defpackage :compdb/test/test-flags.lisp
-  (:USE :common-lisp :prove :compdb/flags.lisp))
-(in-package :compdb/test/test-flags.lisp)
+(defpackage :compdb/test/test-flags
+  (:USE :common-lisp :prove :compdb/flags))
+(in-package :compdb/test/test-flags)
 
 
 ;; ========================================================================== ;;

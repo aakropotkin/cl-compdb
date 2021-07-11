@@ -1,8 +1,8 @@
 
 (in-package :cl-user)
-(defpackage :compdb/test/test-dirs.lisp
-  (:USE :common-lisp :prove :compdb/dirs.lisp))
-(in-package :compdb/test/test-dirs.lisp)
+(defpackage :compdb/test/test-dirs
+  (:USE :common-lisp :prove :compdb/dirs))
+(in-package :compdb/test/test-dirs)
 
 
 ;; ========================================================================== ;;

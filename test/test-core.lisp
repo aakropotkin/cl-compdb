@@ -1,8 +1,8 @@
 
 (in-package :cl-user)
-(defpackage :compdb/test/test-core.lisp
-  (:USE :common-lisp :prove :compdb/core.lisp))
-(in-package :compdb/test/test-core.lisp)
+(defpackage :compdb/test/test-core
+  (:USE :common-lisp :prove :compdb/core))
+(in-package :compdb/test/test-core)
 
 
 ;; ========================================================================== ;;
