@@ -1,4 +1,5 @@
 
+(in-package :cl-user)
 (defpackage :compdb/types
   (:USE :common-lisp)
   (:EXPORT
@@ -47,7 +48,7 @@
        (stringp (car cell))
        (stringp (cdr cell))))
 
-(deftype pair-of-strings ()
+(deftype string-pair ()
   `(satisfies string-pair-p))
 
 
@@ -60,7 +61,7 @@
          (or (stringp d)
              (pathnamep d)))))
 
-(deftype flag-pair-p ()
+(deftype flag-pair ()
   `(satisfies flag-pair-p))
 
 
@@ -73,6 +74,8 @@
 (deftype flag ()
   `(satisfies flag-p))
 
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun list-of-flags-p (lst)
   (and (listp lst)
