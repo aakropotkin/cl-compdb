@@ -20,6 +20,8 @@
    #:scoped-flag
    #:list-of-scoped-flags-p
    #:list-of-scoped-flags
+   #:list-of-list-of-scoped-flags-p
+   #:list-of-list-of-scoped-flags
 
    #:spaceless-opt-arg-p
    #:inc-flag-p
@@ -34,6 +36,7 @@
    #:as-flag
    #:scoped-flag-mark-scope
    #:scoped-flags-mark-scopes
+   #:lolo-scoped-flags-mark-scopes
    ))
 
 (in-package :compdb/flags)
@@ -245,6 +248,16 @@ using `builddir' as the parent directory."
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun list-of-list-of-scoped-flags-p (x)
+  (and (listp x)
+       (every #'list-of-scoped-flags-p x)))
+
+(deftype list-of-list-of-scoped-flags ()
+  `(satisfies list-of-list-of-scoped-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun as-flag (x)
   (declare (type (or flag scoped-flag)))
   (typecase x (flag         x)
@@ -269,6 +282,21 @@ Local flags should be those that are not in any ancestors."
 (defun scoped-flags-mark-scopes (common-sflags sflags)
   (declare (type list-of-scoped-flags common-sflags sflags))
   (mapc (lambda (sf) (scoped-flag-mark-scope common-sflags sf)) sflags))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun lolo-scoped-flags-mark-scopes (sflagss)
+  "From a collection of siblings, discover common flags, and set scopes.
+Returns a `list-of-scoped-flags' of ``common'' flags
+( initialized with default scope )."
+  (declare (type list-of-list-of-scoped-flags-p sflagss))
+  (let* ((flagss  (mapcar (lambda (sfs) (mapcar #'as-flags sfs)) sflagss))
+         (common  (reduce (lambda (a b) (intersection a b :TEST #'equal))
+                          flagss))
+         (sf-comm (mapcar (lambda (f) (make-scoped-flag :FLAG f)) common)))
+    (mapc (lambda (sf) (scoped-flags-mark-scopes sf-comm sf)) sflagss)
+    sf-comm))
 
 
 ;; -------------------------------------------------------------------------- ;;
