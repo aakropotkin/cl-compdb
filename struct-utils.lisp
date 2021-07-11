@@ -4,7 +4,7 @@
   (:USE :common-lisp)
   (:EXPORT #:update-struct))
 
-(in-package :compdb/string-utils)
+(in-package :compdb/struct-utils)
 
 
 ;; ========================================================================== ;;

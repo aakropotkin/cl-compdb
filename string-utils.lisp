@@ -37,6 +37,9 @@
   (declare (type list-of-strings a b))
   (union a b :TEST #'equal))
 
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun strs-uniq (lst)
   (declare (type list-of-strings lst))
   (remove-duplicates lst :TEST #'equal))
