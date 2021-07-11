@@ -32,22 +32,22 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun defalias-replace-first (str-old str-new sym)
-  (declare (type stringp str-old str-new))
+  (declare (type string str-old str-new))
   (declare (type symbol sym))
-  (defalias sym
-            (make-symbol (str:replace-first str-old str-new (symbol-new sym)))))
+  (defalias sym (make-symbol
+                 (str:replace-first str-old str-new (symbol-name sym)))))
 
 (defun defaliases-replace-first (str-old str-new syms)
-  (declare (type stringp str-old str-new))
+  (declare (type string str-old str-new))
   (declare (type list-of-symbols syms))
-  (mapc (lambda (sym) (defalias-replace-first str-old str-new))))
+  (mapc (lambda (sym) (defalias-replace-first str-old str-new sym)) syms))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 ;;(defun defstruct-aliases (struct-sym newname)
 ;;  (declare (type symbol struct-sym))
-;;  (declare (type stringp newname))
+;;  (declare (type string newname))
 ;;  (let* ((sname      (symbol-name struct-sym))
 ;;         (sclass     (find-class struct-sym))
 ;;         (slot-syms  (mapcar
