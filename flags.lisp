@@ -72,28 +72,30 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(declaim (ftype (function (scoped-flag) boolean)
-                scoped-flag-local-p
-                scoped-flag-common-p)
-         (ftype (function (scoped-flag scoped-flag) boolean)
-                scoped-flags-equal-noscope-p)
-         (ftype (function (T) boolean)
-                list-of-scoped-flags-p
-                list-of-list-of-scoped-flags-p)
-         (ftype (function (flag &key (:NOSPACE boolean)) boolean)
-                spaceless-opt-arg-p)
-         (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
-         (ftype (function (list-of-flags
-                           &key (:JOIN-CHAR (or character string null)))
-                          list-of-flags)
-                join-opt-args)
-         (ftype (function (flag) flag) split-spaceless-flag-arg)
-         ;; split-spaceless-flag-arg
-         ;; as-flag
-         ;; scoped-flag-mark-scope
-         ;; scoped-flags-mark-scopes
-         ;; lolo-scoped-flags-mark-scopes
-         )
+(declaim
+ (ftype (function (scoped-flag) boolean)
+        scoped-flag-local-p
+        scoped-flag-common-p)
+ (ftype (function (scoped-flag scoped-flag) boolean)
+        scoped-flags-equal-noscope-p)
+ (ftype (function (T) boolean)
+        list-of-scoped-flags-p
+        list-of-list-of-scoped-flags-p)
+ (ftype (function (flag &key (:NOSPACE boolean)) boolean) spaceless-opt-arg-p)
+ (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
+ (ftype (function (pathname flag-pair) (or flag-pair scoped-flag))
+        fixup-inc-flag-pair)
+ (ftype (function (list-of-flags &key (:JOIN-CHAR (or character string null)))
+                  list-of-flags)
+        join-opt-args)
+ (ftype (function (flag) flag) split-spaceless-flag-arg)
+ (ftype (function ((or flag scoped-flag)) flag) as-flag)
+ (ftype (function (list-of-scoped-flags scoped-flag) boolean)
+        scoped-flag-mark-scope)
+ (ftype (function (list-of-scoped-flags list-of-scoped-flag) T)
+        scoped-flag-mark-scopes)
+ (ftype (function (list-of-list-of-scoped-flags) list-of-scoped-flags)
+        lolo-scoped-flags-mark-scopes))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -123,14 +125,17 @@
 (defun spaceless-opt-arg-p (f &key (nospace NIL))
   (declare (type flag f))
   (declare (type boolean nospace))
-  (and (if (listp f) (and (null nospace)
-                          (find (car f) *spaceless-opt-args* :TEST #'equal))
+  (the boolean
+       (if (flag-pair-p f)
+           (and (not nospace)
+                (find (car f) *spaceless-opt-args* :TEST #'equal)
+                T)
            (and (stringp f)
                 (< 2 (length f))
                 (or (null nospace) (not (equal #\SPACE (char f 2))))
-                (find f *spaceless-opt-args*
-                      :TEST (lambda (f o) (str:starts-with-p o f)))))
-       T))
+                (find-if (lambda (o) (str:starts-with-p o f))
+                         *spaceless-opt-args*)
+                T))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -160,15 +165,18 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+;; FIXME: Use dirpath
 (defun fixup-inc-flag-pair (builddir fpair)
   "Given a `(FLAG . RELATIVE-DIR)' pair, make directory absolute
 using `builddir' as the parent directory."
   (declare (type pathname builddir))
   (declare (type (or flag-pair scoped-flag) fpair))
-  (let ((new-pair (cons (car fpair) (join-pathnames builddir
-                                                    (cdr (as-flag fpair))))))
+  (let ((new-pair (the flag-pair (cons (car fpair)
+                                       (join-pathnames
+                                        builddir
+                                        (cdr (as-flag fpair)))))))
     (if (scoped-flag-p fpair)
-        (make-scoped-flag :LOCAL (scoped-flag-local-p fpair) :FLAG  new-pair)
+        (make-scoped-flag :LOCAL (scoped-flag-local-p fpair) :FLAG new-pair)
         new-pair)))
 
 
@@ -214,8 +222,7 @@ using `builddir' as the parent directory."
          ;; Standalone option ( argument is not in the same string )
          ((find f *opts-with-args* :TEST #'equal) T)
          ;; Flag and argument are in the same string, space separated
-         ((find-if f
-                   (lambda (fl a) (str-space-starts-with-p a fl))
+         ((find-if (lambda (a) (str-space-starts-with-p a f))
                    *opts-with-args*)
           T)
          ;; Fail
@@ -246,9 +253,8 @@ using `builddir' as the parent directory."
 
 (defun def-flag-p (f)
   (declare (type flag f))
-  (the boolean (and (if (stringp f) (str:starts-with-p "-D" f)
-                        (equal "-D" (car f)))
-                    T)))
+  (the boolean (if (stringp f) (str:starts-with-p "-D" f)
+                   (equal "-D" (car f)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -256,24 +262,29 @@ using `builddir' as the parent directory."
 (defun split-spaceless-flag-arg (f)
   (declare (type flag f))
   ;; If `f' isn't a string or an include flag don't change it.
-  (if (not (and (stringp f) (spaceless-opt-arg-p f))) f
-      ;; If there is a space just split there.
-      (let ((space-pos (position #\SPACE f)))
-        (if space-pos (cons (subseq f 0 space-pos)
-                            (subseq f (+ space-pos 1) (length f)))
-            ;; Split immediately after option.
-            (let ((opt (find f *spaceless-opt-args*
-                             :TEST (lambda (f o) (str:starts-with-p o f)))))
-              (if (null opt) NIL  ;; This shouldn't happen
-                  (cons opt (subseq f (length opt) (length f)))))))))
+  (the flag
+       (if (not (and (stringp f) (spaceless-opt-arg-p f))) f
+           ;; If there is a space just split there.
+           (let ((space-pos (the (or fixnum null) (position #\SPACE f))))
+             (if space-pos
+                 (cons (subseq f 0 space-pos)
+                       (subseq f (+ space-pos 1) (length f)))
+                 ;; Split immediately after option.
+                 (let ((opt (find-if (lambda (o) (str:starts-with-p o f))
+                                     *spaceless-opt-args*)))
+                   (or (and opt
+                            (cons opt
+                                  (subseq f (length opt) (length f))))
+                       f)))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun as-flag (x)
   (declare (type (or flag scoped-flag)))
-  (typecase x (flag         x)
-              (scoped-flag  (scoped-flag-flag x))))
+  (the flag (typecase x
+              (flag         x)
+              (scoped-flag  (scoped-flag-flag x)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
