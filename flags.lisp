@@ -44,8 +44,8 @@
 ;; ========================================================================== ;;
 
 (defstruct scoped-flag
-  (local NIL :TYPE boolean)
-  (flag  NIL :TYPE flag))
+  (flag  ""  :TYPE flag)
+  (local NIL :TYPE boolean))
 
 
 ;; -------------------------------------------------------------------------- ;;
