@@ -50,9 +50,9 @@ bindings in `&rest' parameters."
 ;;
 ;; -------------------------------------------------------------------------- ;;
 
-(defun struct-slots (struct)
-  (declare (type structure-object struct))
-  (loop for sl in (sb-mop::class-direct-slots (class-of struct))
+(defun struct-slots (st)
+  (declare (type structure-object st))
+  (loop for sl in (sb-mop::class-direct-slots (class-of st))
         collect (list
                  (sb-mop:slot-definition-name sl)
                  (slot-value sl 'sb-pcl::internal-reader-function))))
