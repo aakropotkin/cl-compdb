@@ -1,5 +1,6 @@
 
 (in-package :cl-user)
+(ql:quickload '(:str :compdb/types))
 (defpackage :compdb/alias
   (:USE :common-lisp)
   (:IMPORT-FROM :str          #:replace-first)
@@ -15,11 +16,19 @@
 
 ;; ========================================================================== ;;
 
+(declaim (ftype (function (symbol symbol) compiled-function) defun-alias)
+         (ftype (function (symbol symbol) T) defvar-alias defalias)
+         (ftype (function (string string symbol) T) defaliase-replace-first)
+         (ftype (function (string string list-of-symbols) T)
+                defaliases-replace-first))
+
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun defun-alias (old new)
   (declare (type symbol old new))
   (assert (fboundp old))
-  (setf (symbol-function new) (symbol-function old)))
+  (the compiled-function (setf (symbol-function new) (symbol-function old))))
 
 (defun defvar-alias (old new)
   (declare (type symbol old new))

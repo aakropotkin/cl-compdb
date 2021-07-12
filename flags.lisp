@@ -1,20 +1,28 @@
 
 (in-package :cl-user)
+(ql:quickload '(:compdb/types :compdb/string-utils :compdb/dirs :str))
 (defpackage :compdb/flags
-  (:USE
-   :common-lisp
-   :compdb/types)
+  (:USE :common-lisp :compdb/types)
   (:IMPORT-FROM :compdb/string-utils #:str-append-char
                                      #:strs-union)
   (:IMPORT-FROM :compdb/dirs         #:join-pathnames)
   (:IMPORT-FROM :str                 #:starts-with-p)
   (:EXPORT
-   #:scoped-flag-p
    #:scoped-flag
+   #:make-scoped-flag
+   #:copy-scoped-flag
+   #:scoped-flag-p
+   #:scoped-flag-local
+   #:scoped-flag-flag
+
+   #:scoped-flag-local-p
+   #:scoped-flag-common-p
+
    #:list-of-scoped-flags-p
    #:list-of-scoped-flags
    #:list-of-list-of-scoped-flags-p
    #:list-of-list-of-scoped-flags
+
 
    #:spaceless-opt-arg-p
    #:inc-flag-p
@@ -24,8 +32,6 @@
    #:def-flag-p
    #:split-spaceless-flag-arg
 
-   #:scoped-flag-local-p
-   #:scoped-flag-common-p
    #:as-flag
    #:scoped-flag-mark-scope
    #:scoped-flags-mark-scopes
@@ -37,6 +43,79 @@
 
 ;; ========================================================================== ;;
 
+(defstruct scoped-flag
+  (local NIL :TYPE boolean)
+  (flag  NIL :TYPE flag))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun list-of-scoped-flags-p (x)
+  (the boolean (and (listp x)
+                    (every #'scoped-flag-p x)
+                    T)))
+
+(deftype list-of-scoped-flags ()
+  `(satisfies list-of-scoped-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun list-of-list-of-scoped-flags-p (x)
+  (the boolean (and (listp x)
+                    (every #'list-of-scoped-flags-p x)
+                    T)))
+
+(deftype list-of-list-of-scoped-flags ()
+  `(satisfies list-of-list-of-scoped-flags-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(declaim (ftype (function (scoped-flag) boolean)
+                scoped-flag-local-p
+                scoped-flag-common-p)
+         (ftype (function (scoped-flag scoped-flag) boolean)
+                scoped-flags-equal-noscope-p)
+         (ftype (function (T) boolean)
+                list-of-scoped-flags-p
+                list-of-list-of-scoped-flags-p)
+         (ftype (function (flag &key (:NOSPACE boolean)) boolean)
+                spaceless-opt-arg-p)
+         (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
+         (ftype (function (list-of-flags
+                           &key (:JOIN-CHAR (or character string null)))
+                          list-of-flags)
+                join-opt-args)
+         (ftype (function (flag) flag) split-spaceless-flag-arg)
+         ;; split-spaceless-flag-arg
+         ;; as-flag
+         ;; scoped-flag-mark-scope
+         ;; scoped-flags-mark-scopes
+         ;; lolo-scoped-flags-mark-scopes
+         )
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flag-local-p (sf)
+  (declare (type scoped-flag sf))
+  (the boolean (scoped-flag-local sf)))
+
+(defun scoped-flag-common-p (sf)
+  (declare (type scoped-flag sf))
+  (the boolean (not (scoped-flag-local-p sf))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun scoped-flags-equal-noscope-p (a b)
+  (declare (type scoped-flag a b))
+  (the boolean (equal (scoped-flag-flag a) (scoped-flag-flag b))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defparameter *spaceless-opt-args*
   (list "-I" "-D" "-l" "-L" "-z" "-u" "-U" "-B" "-W" "-g" "-O"))
 
@@ -44,13 +123,14 @@
 (defun spaceless-opt-arg-p (f &key (nospace NIL))
   (declare (type flag f))
   (declare (type boolean nospace))
-  (if (listp f) (and (null nospace)
-                     (find (car f) *spaceless-opt-args* :TEST #'equal))
-      (and (stringp f)
-           (< 2 (length f))
-           (or (null nospace) (not (equal #\SPACE (char f 2))))
-           (find f *spaceless-opt-args*
-                 :TEST (lambda (f o) (str:starts-with-p o f))))))
+  (and (if (listp f) (and (null nospace)
+                          (find (car f) *spaceless-opt-args* :TEST #'equal))
+           (and (stringp f)
+                (< 2 (length f))
+                (or (null nospace) (not (equal #\SPACE (char f 2))))
+                (find f *spaceless-opt-args*
+                      :TEST (lambda (f o) (str:starts-with-p o f)))))
+       T))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -73,7 +153,9 @@
 
 (defun inc-flag-p (f)
   (declare (type flag f))
-  (str:starts-with-p "-i" (if (stringp f) f (car f)) :IGNORE-CASE T))
+  (the boolean (str:starts-with-p "-i"
+                                  (the string (if (stringp f) f (car f)))
+                                  :IGNORE-CASE T)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -81,7 +163,7 @@
 (defun fixup-inc-flag-pair (builddir fpair)
   "Given a `(FLAG . RELATIVE-DIR)' pair, make directory absolute
 using `builddir' as the parent directory."
-  (declare (type pathnamep builddir))
+  (declare (type pathname builddir))
   (declare (type (or flag-pair scoped-flag) fpair))
   (let ((new-pair (cons (car fpair) (join-pathnames builddir
                                                     (cdr (as-flag fpair))))))
@@ -117,22 +199,27 @@ using `builddir' as the parent directory."
 
 
 (defun str-space-starts-with-p (prefix str)
-  (let ((spre (str-append-char (prefix #\SPACE))))
-    (str:starts-with-p spre str)))
+  (declare (type string prefix str))
+  (let ((spre (str-append-char prefix #\SPACE)))
+    (the boolean (str:starts-with-p spre str))))
 
 (defun opt-with-arg-p (f)
   (declare (type flag f))
-  (cond
-    ;; Flag Pair
-    ((listp f) (find (car f) *opts-with-args* :TEST #'equal))
-    ;; Spaceless option with argument
-    ((spaceless-opt-arg-p f) f)
-    ;; Standalone option ( argument is not in the same string )
-    ((find f *opts-with-args* :TEST #'equal) f)
-    ;; Flag and argument are in the same string, space separated
-    ((find f (lambda (fl a) (str-space-starts-with-p a fl)) *opts-with-args*) f)
-    ;; Fail
-    (T NIL)))
+  (the boolean
+       (cond
+         ;; Flag Pair
+         ((listp f) (and (find (car f) *opts-with-args* :TEST #'equal) T))
+         ;; Spaceless option with argument
+         ((spaceless-opt-arg-p f) T)
+         ;; Standalone option ( argument is not in the same string )
+         ((find f *opts-with-args* :TEST #'equal) T)
+         ;; Flag and argument are in the same string, space separated
+         ((find-if f
+                   (lambda (fl a) (str-space-starts-with-p a fl))
+                   *opts-with-args*)
+          T)
+         ;; Fail
+         (T NIL))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -140,21 +227,28 @@ using `builddir' as the parent directory."
 (defun join-opt-args (args &key (join-char NIL))
   (declare (type list-of-flags args))
   (declare (type (or character string null) join-char))
-  (let ((jc-str (if (and join-char (characterp join-char)) (string join-char))))
-    (loop for a in args
-          for argp = (find a *opts-with-args* :TEST #'equal)
-          and joinp = NIL then argp
-          when (null argp)
-            collect (if (null joinp) a
-                        (if join-char (concatenate 'string joinp jc-str a)
-                            (cons joinp a))))))
+  (the list-of-flags
+       (let ((jc-str (the string (if (and join-char (characterp join-char))
+                                     (string join-char)
+                                     join-char))))
+         (loop for a in args
+               for argp = (find a *opts-with-args* :TEST #'equal)
+               and joinp = NIL then argp
+               when (null argp)
+                 collect (the flag
+                              (if (null joinp) a
+                                  (if join-char
+                                      (concatenate 'string joinp jc-str a)
+                                      (cons joinp a))))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun def-flag-p (f)
   (declare (type flag f))
-  (if (stringp f) (str:starts-with-p "-D" f) (equal "-D" (car f))))
+  (the boolean (and (if (stringp f) (str:starts-with-p "-D" f)
+                        (equal "-D" (car f)))
+                    T)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -172,49 +266,6 @@ using `builddir' as the parent directory."
                              :TEST (lambda (f o) (str:starts-with-p o f)))))
               (if (null opt) NIL  ;; This shouldn't happen
                   (cons opt (subseq f (length opt) (length f)))))))))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defstruct scoped-flag
-  (local NIL :TYPE boolean)
-  (flag  NIL :TYPE flag))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun scoped-flag-local-p (sf)
-  (declare (type scoped-flag sf))
-  (scoped-flag-local sf))
-
-(defun scoped-flag-common-p (sf)
-  (not (scoped-flag-local-p sf)))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun scoped-flag-equal-noscope-p (a b)
-  (equal (scoped-flag-flag a) (scoped-flag-flags b)))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-scoped-flags-p (x)
-  (and (listp x)
-       (every #'scoped-flag-p x)))
-
-(deftype list-of-scoped-flags ()
-  `(satisfies list-of-scoped-flags-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-list-of-scoped-flags-p (x)
-  (and (listp x)
-       (every #'list-of-scoped-flags-p x)))
-
-(deftype list-of-list-of-scoped-flags ()
-  `(satisfies list-of-list-of-scoped-flags-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -251,8 +302,8 @@ Local flags should be those that are not in any ancestors."
   "From a collection of siblings, discover common flags, and set scopes.
 Returns a `list-of-scoped-flags' of ``common'' flags
 ( initialized with default scope )."
-  (declare (type list-of-list-of-scoped-flags-p sflagss))
-  (let* ((flagss  (mapcar (lambda (sfs) (mapcar #'as-flags sfs)) sflagss))
+  (declare (type list-of-list-of-scoped-flags sflagss))
+  (let* ((flagss  (mapcar (lambda (sfs) (mapcar #'as-flag sfs)) sflagss))
          (common  (reduce (lambda (a b) (intersection a b :TEST #'equal))
                           flagss))
          (sf-comm (mapcar (lambda (f) (make-scoped-flag :FLAG f)) common)))

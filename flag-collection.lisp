@@ -1,5 +1,7 @@
 
 (in-package :cl-user)
+(ql:quickload
+ '(:compdb/types :compdb/flags :compdb/alias :compdb/json-cdb :compdb/lang-tag))
 (defpackage :compdb/flag-collection
   (:USE
    :common-lisp

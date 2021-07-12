@@ -18,31 +18,44 @@
 
 ;; ========================================================================== ;;
 
+(declaim (ftype (function (list-of-strings list-of-strings) boolean)
+                strs-equal)
+         (ftype (function (list-of-strings list-of-strings) list-of-strings)
+                strs-intersect
+                strs-difference
+                strs-union)
+         (ftype (function (list-of-strings) list-of-strings) strs-uniq)
+         (ftype (function (string character) string)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun strs-equal (a b)
   "Set equality for lists of strings."
-  (null (set-exclusive-or a b :TEST #'equal)))
+  (declare (type list-of-strings a b))
+  (the boolean (null (set-exclusive-or a b :TEST #'equal))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun strs-intersect (a b)
   (declare (type list-of-strings a b))
-  (intersection a b :TEST #'equal))
+  (the list-of-strings (intersection a b :TEST #'equal)))
 
 (defun strs-difference (a b)
   (declare (type list-of-strings a b))
-  (set-difference a b :TEST #'equal))
+  (the list-of-strings (set-difference a b :TEST #'equal)))
 
 (defun strs-union (a b)
   (declare (type list-of-strings a b))
-  (union a b :TEST #'equal))
+  (the list-of-strings (union a b :TEST #'equal)))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun strs-uniq (lst)
   (declare (type list-of-strings lst))
-  (remove-duplicates lst :TEST #'equal))
+  (the list-of-strings (remove-duplicates lst :TEST #'equal)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -50,7 +63,7 @@
 (defun str-append-char (str ch)
   (declare (type string str))
   (declare (type character ch))
-  (concatenate 'string str (string ch)))
+  (the string (concatenate 'string str (string ch))))
 
 
 ;; -------------------------------------------------------------------------- ;;

@@ -9,6 +9,12 @@
 
 ;; ========================================================================== ;;
 
+(declaim (ftype (function (structure-object &REST T) structure-object)
+                update-struct))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun update-struct (struct &rest bindings)
   "Copy `struct' with modified fields provided as `(quote FIELD) VALUE'
 bindings in `&rest' parameters."

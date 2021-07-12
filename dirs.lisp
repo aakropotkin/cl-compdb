@@ -1,9 +1,8 @@
 
 (in-package :cl-user)
+(ql:quickload '(:compdb/types :uiop))
 (defpackage :compdb/dirs
-  (:USE
-   :common-lisp
-   :compdb/types)
+  (:USE :common-lisp :compdb/types)
   (:IMPORT-FROM :uiop #:directory-separator-for-host)
   (:EXPORT
    #:directory-component-p
