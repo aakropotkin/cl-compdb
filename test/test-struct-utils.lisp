@@ -65,6 +65,32 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(subtest "Test `struct-p' function."
+  (let ((f1 (make-foo :X 5 :Y 8)))
+    (ok (struct-p f1))
+    (ok (not (struct-p 5)))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(subtest "Test `struct-to-list' function."
+  (let ((f1 (make-foo :X 5 :Y 8))
+        (f2 (make-foo :X 0 :Y NIL))
+        (f3 (make-foo :X 8 :Y "Hello")))
+    (ok (equalp (struct-to-list f1) (struct-values f1)))
+    (ok (equalp (struct-to-list f2) (struct-values f2)))
+    (ok (equalp (struct-to-list f3) (struct-values f3)))
+    (let* ((f4   (make-foo :X 1 :Y f1))
+           (f1-l (struct-to-list f1))
+           (f4-l (struct-to-list f4))
+           (f4-y (cdaddr f4-l)))
+      (ok (not (equalp (struct-values f4) f4-l)))
+      (ok (equalp ()))
+      )))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 
 
 ;; ========================================================================== ;;
