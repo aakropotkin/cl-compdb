@@ -35,14 +35,15 @@
 
 (defmacro def-pair-type (name t1 t2)
   (let ((name-t (intern
-                 (concatenate 'string "PAIR-OF-" (symbol-name name) "-P")))
-        (name-p (intern (concatenate 'string (symbol-name name) "-P"))))
+                 (concatenate 'string "PAIR-OF-" (symbol-name name))))
+        (name-p (intern
+                 (concatenate 'string "PAIR-OF-" (symbol-name name) "-P"))))
     `(progn
        (defun ,name-p (x)
-         (and (consp x)
-              (typep (car x) (quote ,t1))
-              (typep (cdr x) (quote ,t2))
-              T))
+         (the boolean (and (consp x)
+                           (typep (car x) (quote ,t1))
+                           (typep (cdr x) (quote ,t2))
+                           T)))
        (deftype ,name-t ()
          (quote (satisfies ,name-p))))))
 
@@ -67,7 +68,7 @@
 
 (def-list-type strings   string)
 (def-list-type pathnames pathname)
-(def-pair-type strings   string)
+(def-pair-type strings   string string)
 (def-list-type symbols   symbol)
 
 
