@@ -85,7 +85,7 @@
            (f4-l (struct-to-list f4))
            (f4-y (cdaddr f4-l)))
       (ok (not (equalp (struct-values f4) f4-l)))
-      (ok (equalp ()))
+      ;;(ok (equalp ()))
       )))
 
 
