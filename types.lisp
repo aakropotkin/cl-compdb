@@ -21,9 +21,6 @@
                 list-of-strings-p
                 list-of-pathnames-p
                 string-pair-p
-                flag-pair-p
-                flag-p
-                list-of-flags-p
                 list-of-symbols-p))
 
 

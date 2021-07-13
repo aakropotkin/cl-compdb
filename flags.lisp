@@ -50,6 +50,37 @@
 
 ;; ========================================================================== ;;
 
+(declaim
+ (ftype (function (scoped-flag) boolean)
+        scoped-flag-local-p
+        scoped-flag-common-p)
+ (ftype (function (scoped-flag scoped-flag) boolean)
+        scoped-flags-equal-noscope-p)
+ (ftype (function (T) boolean)
+        flag-pair-p
+        flag-p
+        list-of-flags-p
+        list-of-scoped-flags-p
+        list-of-list-of-scoped-flags-p)
+ (ftype (function (flag &key (:NOSPACE boolean)) boolean) spaceless-opt-arg-p)
+ (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
+ (ftype (function (pathname flag-pair) (or flag-pair scoped-flag))
+        fixup-inc-flag-pair)
+ (ftype (function (list-of-flags &key (:JOIN-CHAR (or character string null)))
+                  list-of-flags)
+        join-opt-args)
+ (ftype (function (flag) flag) split-spaceless-flag-arg)
+ (ftype (function ((or flag scoped-flag)) flag) as-flag)
+ (ftype (function (list-of-scoped-flags scoped-flag) boolean)
+        scoped-flag-mark-scope)
+ (ftype (function (list-of-scoped-flags list-of-scoped-flag) T)
+        scoped-flag-mark-scopes)
+ (ftype (function (list-of-list-of-scoped-flags) list-of-scoped-flags)
+        lolo-scoped-flags-mark-scopes))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun flag-pair-p (x)
   (the boolean (and (consp x)
                     (stringp (car x))
@@ -86,11 +117,6 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-
-
-
-;; -------------------------------------------------------------------------- ;;
-
 (defstruct scoped-flag
   (flag  ""  :TYPE flag)
   (local NIL :TYPE boolean))
@@ -116,34 +142,6 @@
 
 (deftype list-of-list-of-scoped-flags ()
   `(satisfies list-of-list-of-scoped-flags-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(declaim
- (ftype (function (scoped-flag) boolean)
-        scoped-flag-local-p
-        scoped-flag-common-p)
- (ftype (function (scoped-flag scoped-flag) boolean)
-        scoped-flags-equal-noscope-p)
- (ftype (function (T) boolean)
-        list-of-scoped-flags-p
-        list-of-list-of-scoped-flags-p)
- (ftype (function (flag &key (:NOSPACE boolean)) boolean) spaceless-opt-arg-p)
- (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
- (ftype (function (pathname flag-pair) (or flag-pair scoped-flag))
-        fixup-inc-flag-pair)
- (ftype (function (list-of-flags &key (:JOIN-CHAR (or character string null)))
-                  list-of-flags)
-        join-opt-args)
- (ftype (function (flag) flag) split-spaceless-flag-arg)
- (ftype (function ((or flag scoped-flag)) flag) as-flag)
- (ftype (function (list-of-scoped-flags scoped-flag) boolean)
-        scoped-flag-mark-scope)
- (ftype (function (list-of-scoped-flags list-of-scoped-flag) T)
-        scoped-flag-mark-scopes)
- (ftype (function (list-of-list-of-scoped-flags) list-of-scoped-flags)
-        lolo-scoped-flags-mark-scopes))
 
 
 ;; -------------------------------------------------------------------------- ;;
