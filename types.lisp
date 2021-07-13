@@ -9,12 +9,6 @@
    #:list-of-pathnames
    #:string-pair-p
    #:string-pair
-   #:flag-pair-p
-   #:flag-pair
-   #:flag-p
-   #:flag
-   #:list-of-flags-p
-   #:list-of-flags
    #:list-of-symbols-p
    #:list-of-symbols))
 
@@ -65,42 +59,6 @@
 
 (deftype string-pair ()
   `(satisfies string-pair-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun flag-pair-p (x)
-  (the boolean (and (consp x)
-                    (stringp (car x))
-                    (let ((d (cdr x)))
-                      (or (stringp d)
-                          (pathnamep d)))
-                    T)))
-
-(deftype flag-pair ()
-  `(satisfies flag-pair-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun flag-p (x)
-  (the boolean (and (or (stringp x)
-                        (flag-pair-p x))
-                    T)))
-
-(deftype flag ()
-  `(satisfies flag-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-flags-p (lst)
-  (the boolean (and (listp lst)
-                    (every #'flag-p lst)
-                    T)))
-
-(deftype list-of-flags ()
-  `(satisfies list-of-flags-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
