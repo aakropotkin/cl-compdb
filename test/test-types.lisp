@@ -34,12 +34,12 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(subtest "Test `string-pair' type."
-  (ok (string-pair-p (cons "foo" "bar")))
-  (ok (not (string-pair-p (cons "foo" 4))))
-  (is-type (cons "foo" "bar") 'string-pair)
-  (ok (typep (cons "foo" "bar") 'string-pair))
-  (ok (not (typep (cons "foo" 4) 'string-pair))))
+(subtest "Test `pair-of-strings' type."
+  (ok (pair-of-strings-p (cons "foo" "bar")))
+  (ok (not (pair-of-strings-p (cons "foo" 4))))
+  (is-type (cons "foo" "bar") 'pair-of-strings)
+  (ok (typep (cons "foo" "bar") 'pair-of-strings))
+  (ok (not (typep (cons "foo" 4) 'pair-of-strings))))
 
 
 ;; -------------------------------------------------------------------------- ;;
