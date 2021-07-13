@@ -103,16 +103,11 @@
 (deftype flag ()
   `(satisfies flag-p))
 
+(def-list-type flags flag)
+
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun list-of-flags-p (lst)
-  (the boolean (and (listp lst)
-                    (every #'flag-p lst)
-                    T)))
-
-(deftype list-of-flags ()
-  `(satisfies list-of-flags-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -121,27 +116,8 @@
   (flag  ""  :TYPE flag)
   (local NIL :TYPE boolean))
 
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-scoped-flags-p (x)
-  (the boolean (and (listp x)
-                    (every #'scoped-flag-p x)
-                    T)))
-
-(deftype list-of-scoped-flags ()
-  `(satisfies list-of-scoped-flags-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-list-of-scoped-flags-p (x)
-  (the boolean (and (listp x)
-                    (every #'list-of-scoped-flags-p x)
-                    T)))
-
-(deftype list-of-list-of-scoped-flags ()
-  `(satisfies list-of-list-of-scoped-flags-p))
+(def-list-type scoped-flags scoped-flag)
+(def-list-type list-of-scoped-flags list-of-scoped-flags)
 
 
 ;; -------------------------------------------------------------------------- ;;
