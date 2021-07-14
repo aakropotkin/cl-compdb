@@ -71,16 +71,6 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun list-of-directory-components-p (x)
-  (and (listp x)
-       (every #'directory-component-p x)))
-
-(deftype list-of-directory-components ()
-  `(satisfies list-of-directory-components-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
 (defun directory-pathname-p (x)
   (and (pathnamep x)
        (null (pathname-name x))
@@ -88,16 +78,6 @@
 
 (deftype directory-pathname ()
   `(satisfies directory-pathname-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun list-of-directory-pathnames-p (x)
-  (and (listp x)
-       (every #'directory-pathname-p x)))
-
-(deftype list-of-directory-pathnames ()
-  `(satisfies list-of-directory-pathnames-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -116,16 +96,6 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun list-of-dirpaths-p (x)
-  (and (listp x)
-       (every #'dirpath-p x)))
-
-(deftype list-of-dirpaths ()
-  `(satisfies list-of-dirpaths-p))
-
-
-;; -------------------------------------------------------------------------- ;;
-
 (defun path-p (x)
   (or (pathnamep x)
       (dirpath-p x)
@@ -140,12 +110,10 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun list-of-paths-p (x)
-  (and (listp x)
-       (every #'path-p x)))
-
-(deftype list-of-paths ()
-  `(satisfies list-of-paths-p))
+(def-list-type directory-components directory-component)
+(def-list-type directory-pathnames  directory-pathname)
+(def-list-type dirpaths             dirpath)
+(def-list-type paths                path)
 
 
 ;; -------------------------------------------------------------------------- ;;
