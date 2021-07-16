@@ -1,9 +1,18 @@
 
 (in-package :cl-user)
+(ql:quickload '(:compdb/types
+                :cl-json
+                :compdb/dirs
+                :compdb/lang-tag
+                :compdb/flags
+                :compdb/alias
+                :uiop
+                :str))
 (defpackage :compdb/json-cdb
   (:USE
    :common-lisp
-   :compdb/types)
+   :compdb/types
+   :compdb/alias)
   (:IMPORT-FROM :cl-json         #:decode-json)
   (:IMPORT-FROM :compdb/dirs     #:parse-dir-namestring
                                  #:join-pathnames)
@@ -14,12 +23,13 @@
   (:IMPORT-FROM :uiop            #:pathname-directory-pathname)
   (:IMPORT-FROM :str             #:starts-with-p)
   (:EXPORT
+   #:parse-compdb-json
    #:get-jcu-args
    #:get-jcu-compiler
    #:get-jcu-lang-tag
+   #:get-jcu-build-dir
    #:get-jcu-src
    #:get-jcu-output
-   #:parse-compdb-json
    ))
 
 (in-package :compdb/json-cdb)
@@ -27,26 +37,41 @@
 
 ;; ========================================================================== ;;
 
+(defun parse-compdb-json (fpath)
+  (declare (type (or string pathname) fpath))
+  (with-open-file (fjson fpath)
+    (json:decode-json fjson)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+;(defun get-jcu-member (member jcu)
+;  (declare (type cons jcu))
+;  (loop for x in jcu
+;        when (equal member (car x))
+;          return (cdr x)))
 (defun get-jcu-member (member jcu)
-  (declare (type cons jcu))
-  (loop for x in jcu
-        when (equal member (car x))
-          return (cdr x)))
+  (declare (type keyword member))
+  (declare (type list jcu))
+  (cdr (assoc member jcu)))
+
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun get-jcu-args
     (jcu &key (raw NIL)
               (join-char NIL))
-  (declare (type cons jcu))
+  (declare (type list jcu))
   (declare (type boolean raw))
   (declare (type (or character string null) join-char))
-  (let* ((r (get-jcu-member :ARGUMENTS cu)))
+  (let* ((r (get-jcu-member :ARGUMENTS jcu)))
     (if raw r  ;; Don't join arguments.
         (if join-char (join-opt-args r :JOIN-CHAR join-char)
             ;; Split "spaceless argument" flags into `( FLAG . ARGUMENT )'.
             (mapcar #'split-spaceless-flag-arg (join-opt-args r))))))
 
 (defun get-jcu-compiler (jcu)
-  (declare (type cons jcu))
+  (declare (type list jcu))
   (car (get-jcu-member :ARGUMENTS jcu)))
 
 
@@ -98,14 +123,6 @@
                                (parse-namestring output))
         (get-output-from-args jcu :RELATIVE relative))))
 
-
-
-;; -------------------------------------------------------------------------- ;;
-
-(defun parse-compdb-json (fpath)
-  (declare (type (or string pathname) fpath))
-  (with-open-file (fjson fpath)
-    (json:decode-json fjson)))
 
 
 ;; -------------------------------------------------------------------------- ;;
