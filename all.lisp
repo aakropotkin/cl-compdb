@@ -14,6 +14,7 @@
    :compdb/lang-tag
    :compdb/srcdir
    :compdb/string-utils
+   :compdb/struct-utils
    :compdb/types
    :compdb/alias))
 

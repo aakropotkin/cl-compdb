@@ -5,7 +5,8 @@
   (:USE :common-lisp :compdb/types :compdb/lang-tag)
   (:IMPORT-FROM :compdb/string-utils #:str-append-char
                                      #:strs-union)
-  (:IMPORT-FROM :compdb/dirs         #:join-pathnames)
+  (:IMPORT-FROM :compdb/dirs         #:join-pathnames
+                                     #:path)
   (:IMPORT-FROM :str                 #:starts-with-p)
   (:EXPORT
    #:flag-pair-p
@@ -63,7 +64,7 @@
                   list-of-flags)
         join-opt-args)
  (ftype (function (flag) flag) split-spaceless-flag-arg)
- (ftype (function (or flag flag-pair string) flag) as-flag)
+ ;(ftype (function (or flag flag-pair string) flag) as-flag)
  (ftype (function (list-of-flags flag) boolean) flag-mark-scope)
  (ftype (function (list-of-flags list-of-flag) T) flag-mark-scopes)
  (ftype (function (list-of-list-of-flags) list-of-flags)
@@ -83,10 +84,10 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defstruct flag
-  (opt   NIL  (or string null))
-  (arg   NIL  (or string path null))
-  (lang  NIL  (or lang-tag null))
-  (scope NIL  (or flag-scope null)))
+  (opt   NIL :TYPE (or string null))
+  (arg   NIL :TYPE (or string path null))
+  (lang  NIL :TYPE (or lang-tag null))
+  (scope NIL :TYPE (or flag-scope null)))
 
 (def-list-type flags flag)
 (def-list-type list-of-flags list-of-flags)
