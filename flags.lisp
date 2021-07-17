@@ -6,6 +6,7 @@
   (:IMPORT-FROM :compdb/string-utils #:str-append-char
                                      #:strs-union)
   (:IMPORT-FROM :compdb/dirs         #:join-pathnames
+                                     #:path-p
                                      #:path)
   (:IMPORT-FROM :str                 #:starts-with-p)
   (:EXPORT
@@ -27,6 +28,11 @@
 
    #:flag-local-p
    #:flag-common-p
+
+   #:flaggable-p
+   #:flaggable
+   #:list-of-flaggables-p
+   #:list-of-flaggables
 
    #:spaceless-opt-arg-p
    #:inc-flag-p
@@ -56,15 +62,11 @@
         flag-p
         list-of-flags-p
         list-of-list-of-flags-p)
- (ftype (function (flag &key (:NOSPACE boolean)) boolean) spaceless-opt-arg-p)
+ (ftype (function (flaggable &key (:NOSPACE boolean)) boolean)
+        spaceless-opt-arg-p)
  (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
  (ftype (function (pathname flag-pair) (or flag-pair flag))
         fixup-inc-flag-pair)
- (ftype (function (list-of-flags &key (:JOIN-CHAR (or character string null)))
-                  list-of-flags)
-        join-opt-args)
- (ftype (function (flag) flag) split-spaceless-flag-arg)
- ;(ftype (function (or flag flag-pair string) flag) as-flag)
  (ftype (function (list-of-flags flag) boolean) flag-mark-scope)
  (ftype (function (list-of-flags list-of-flag) T) flag-mark-scopes)
  (ftype (function (list-of-list-of-flags) list-of-flags)
@@ -128,6 +130,19 @@
 
 (deftype flaggable ()
   `(satisfies flaggable-p))
+
+(def-list-type flaggables flaggable)
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(declaim
+ (ftype (function
+         (list-of-flaggables &key (:JOIN-CHAR (or character string null)))
+         list-of-flaggables)
+        join-opt-args)
+ (ftype (function (flaggable) flaggable) split-spaceless-flag-arg)
+ (ftype (function (flaggable) flag) as-flag))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -281,17 +296,17 @@ using `builddir' as the parent directory."
 ;; -------------------------------------------------------------------------- ;;
 
 (defun join-opt-args (args &key (join-char NIL))
-  (declare (type list-of-flags args))
+  (declare (type list-of-flaggables args))
   (declare (type (or character string null) join-char))
-  (the list-of-flags
-       (let ((jc-str (the string (if (and join-char (characterp join-char))
-                                     (string join-char)
-                                     join-char))))
+  (the list-of-flaggables
+       (let ((jc-str (if (and join-char (characterp join-char))
+                         (string join-char)
+                         join-char)))
          (loop for a in args
                for argp = (find a *opts-with-args* :TEST #'equal)
                and joinp = NIL then argp
                when (null argp)
-                 collect (the flag
+                 collect (the flaggable
                               (if (null joinp) a
                                   (if join-char
                                       (concatenate 'string joinp jc-str a)
@@ -309,9 +324,9 @@ using `builddir' as the parent directory."
 ;; -------------------------------------------------------------------------- ;;
 
 (defun split-spaceless-flag-arg (f)
-  (declare (type flag f))
+  (declare (type flaggable f))
   ;; If `f' isn't a string or an include flag don't change it.
-  (the flag
+  (the flaggable
        (if (not (and (stringp f) (spaceless-opt-arg-p f))) f
            ;; If there is a space just split there.
            (let ((space-pos (the (or fixnum null) (position #\SPACE f))))
