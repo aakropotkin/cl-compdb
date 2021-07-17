@@ -5,7 +5,7 @@
   (:USE :common-lisp :prove :compdb/flags)
   (:EXPORT
    #:test-flag-pair-t
-   #:test-flag-t
+   #:test-flaggable-t
    #:test-list-of-flags
    #:run-test-flags))
 (in-package :compdb/test/test-flags)
@@ -29,41 +29,41 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun test-flag-t ()
-    (subtest "Test `flag' type."
-      (ok (flag-p "foo"))
-      (ok (flag-p (cons "foo" "bar")))
-      (ok (flag-p (cons "foo" #P"bar")))
-      (ok (not (flag-p (cons "foo" 4))))
-      (ok (not (flag-p (cons #P"foo" 4))))
-      (ok (not (flag-p 4)))
-      (ok (not (flag-p 'foo)))
-      (is-type "foo" 'flag)
-      (is-type (cons "foo" "bar") 'flag)
-      (is-type (cons "foo" #P"bar") 'flag)
-      (ok (typep "foo" 'flag))
-      (ok (typep (cons "foo" "bar") 'flag))
-      (ok (typep (cons "foo" #P"bar") 'flag))
-      (ok (not (typep (cons "foo" 4) 'flag)))
-      (ok (not (typep (cons #P"foo" 4) 'flag)))
-      (ok (not (typep 4 'flag)))
-      (ok (not (typep 'foo 'flag)))))
+(defun test-flaggable-t ()
+    (subtest "Test `flaggable' type."
+      (ok (flaggable-p "foo"))
+      (ok (flaggable-p (cons "foo" "bar")))
+      (ok (flaggable-p (cons "foo" #P"bar")))
+      (ok (not (flaggable-p (cons "foo" 4))))
+      (ok (not (flaggable-p (cons #P"foo" 4))))
+      (ok (not (flaggable-p 4)))
+      (ok (not (flaggable-p 'foo)))
+      (is-type "foo" 'flaggable)
+      (is-type (cons "foo" "bar") 'flaggable)
+      (is-type (cons "foo" #P"bar") 'flaggable)
+      (ok (typep "foo" 'flaggable))
+      (ok (typep (cons "foo" "bar") 'flaggable))
+      (ok (typep (cons "foo" #P"bar") 'flaggable))
+      (ok (not (typep (cons "foo" 4) 'flaggable)))
+      (ok (not (typep (cons #P"foo" 4) 'flaggable)))
+      (ok (not (typep 4 'flaggable)))
+      (ok (not (typep 'foo 'flaggable)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun test-list-of-flags ()
-    (subtest "Test `list-of-flags' type."
-      (ok (list-of-flags-p (list "foo" (cons "bar" "baz"))))
-      (ok (list-of-flags-p (list)))
-      (ok (not (list-of-flags-p (list 4))))
-      (ok (not (list-of-flags-p 4)))
-      (ok (not (list-of-flags-p (list "foo" 4))))
+(defun test-list-of-flaggables ()
+    (subtest "Test `list-of-flaggables' type."
+      (ok (list-of-flaggables-p (list "foo" (cons "bar" "baz"))))
+      (ok (list-of-flaggables-p (list)))
+      (ok (not (list-of-flaggables-p (list 4))))
+      (ok (not (list-of-flaggables-p 4)))
+      (ok (not (list-of-flaggables-p (list "foo" 4))))
       (is-type (list "foo" (cons "bar" "baz") (cons "qux" #P"sal"))
-               'list-of-flags)
-      (is-type (list) 'list-of-flags)
-      (ok (not (typep (list 4) 'list-of-flags)))
-      (ok (typep (list "foo" (cons "bar" "baz")) 'list-of-flags))))
+               'list-of-flaggables)
+      (is-type (list) 'list-of-flaggables)
+      (ok (not (typep (list 4) 'list-of-flaggables)))
+      (ok (typep (list "foo" (cons "bar" "baz")) 'list-of-flaggables))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -100,8 +100,8 @@
 
 (defun run-test-flags ()
   (test-flag-pair-t)
-  (test-flag-t)
-  (test-list-of-flags)
+  (test-flaggable-t)
+  (test-list-of-flaggables)
   ;(test-scoped-flag)
   )
 
