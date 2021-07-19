@@ -7,6 +7,7 @@
   (:IMPORT-FROM :compdb/string-utils #:str-append-char
                                      #:strs-union)
   (:IMPORT-FROM :compdb/dirs         #:join-pathnames
+                                     #:dirpath
                                      #:path-p
                                      #:path)
   (:IMPORT-FROM :str                 #:starts-with-p)
@@ -39,12 +40,15 @@
    #:as-raw-flag-pair
    #:as-flag-string
 
-   #:spaceless-opt-arg-p
+   #:def-flag-p
+
    #:inc-flag-p
    #:fixup-inc-flag-pair
+
    #:opt-with-arg-p
    #:join-opt-args
-   #:def-flag-p
+
+   #:spaceless-opt-arg-p
    #:split-spaceless-flag-arg
 
    #:flag-mark-scope
@@ -58,12 +62,6 @@
 ;; ========================================================================== ;;
 ;;
 ;; TODO:
-;; [ ] `fixup-inc-flag-pair' needs to updated to use `flag' instead
-;;     of `scoped-flag'.
-;;
-;; [ ] `opt-with-arg-p' needs to be updated to treat `flag' as a stuct, and
-;;     `flaggable' for its existing `flag' type declarations.
-;;
 ;; [ ] `scoped-flag-mark-scope' needs to be updated to use `flag' instead
 ;;     of `scoped-flag'.
 ;;
@@ -86,11 +84,9 @@
         list-of-flags-p
         list-of-list-of-flags-p)
  (ftype (function (flaggable &key (:NOSPACE boolean)) boolean)
-        spaceless-opt-arg-p
-        def-flag-p)
- (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p)
- (ftype (function (pathname flag-pair) (or flag-pair flag))
-        fixup-inc-flag-pair)
+        spaceless-opt-arg-p)
+ (ftype (function (flaggable) boolean) def-flag-p inc-flag-p opt-with-arg-p)
+ (ftype (function (dirpath flag-pair) flag-pair) fixup-inc-flag-pair)
  (ftype (function (list-of-flags flag) boolean) flag-mark-scope)
  (ftype (function (list-of-flags list-of-flag) T) flag-mark-scopes)
  (ftype (function (list-of-list-of-flags) list-of-flags)
@@ -304,29 +300,37 @@ the same the same subdir, or other `subdir' members who share a parent dir."
    ))
 
 (defun inc-flag-p (f)
+  "The ``flag like'' parameter `F' is an ``include style'' option.
+This excludes the use of `--sysroot=<DIR>' options, but will recognize any other
+GCC option which is prefixed with ``-i'' or ``-I''."
   (declare (type flaggable f))
   (let ((optstr (the string (typecase f
                               (flag          (flag-opt f))
                               (raw-flag-pair (car f))
                               (string        f)))))
-    (the boolean (str:starts-with-p "-i" optstr :IGNORE-CASE T))))
+    (the boolean (and (str:starts-with-p "-i" optstr :IGNORE-CASE T)
+                      T))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-;; FIXME: Use dirpath, use `flag' instead of `scoped-flag'
 (defun fixup-inc-flag-pair (builddir fpair)
   "Given a `(FLAG . RELATIVE-DIR)' pair, make directory absolute
-using `builddir' as the parent directory."
-  (declare (type pathname builddir))
-  (declare (type (or flag-pair scoped-flag) fpair))
-  (let ((new-pair (the flag-pair (cons (car fpair)
-                                       (join-pathnames
-                                        builddir
-                                        (cdr (as-flag fpair)))))))
-    (if (scoped-flag-p fpair)
-        (make-scoped-flag :LOCAL (scoped-flag-local-p fpair) :FLAG new-pair)
-        new-pair)))
+using `builddir' as the parent directory.
+Return the same type as the one provided, meaning when `fpair' is a
+`raw-flag-pair' a modified `raw-flag-pair' is returned, while for a `flag' an
+updated `flag' is returned."
+  (declare (type dirpath builddir))
+  (declare (type flag-pair fpair))
+
+  (flet ((fix-inc-path (x) (join-pathnames builddir x)))
+    (typecase fpair
+      (flag  (the flag (make-flag :OPT   (flag-opt fpair)
+                                  :ARG   (fix-inc-path (flag-arg fpair))
+                                  :LANG  (flag-lang fpair)
+                                  :SCOPE (flag-scope fpair))))
+      (raw-flag-pair (the raw-flag-pair (cons (car fpair)
+                                              (fix-inc-path (cdr fpair))))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -361,26 +365,25 @@ using `builddir' as the parent directory."
     (the boolean (str:starts-with-p spre str))))
 
 (defun opt-with-arg-p (f)
-  (declare (type flag f))
+  "The ``flaggable'' parameter `F' has an argument?
+In cases where `F' is a string, the flag and argument must be space separated."
+  (declare (type flaggable f))
   (the boolean
-       (cond
-         ;; Flag Pair
-         ((listp f) (and (find (car f) *opts-with-args* :TEST #'equal) T))
-         ;; Spaceless option with argument
-         ((spaceless-opt-arg-p f) T)
-         ;; Standalone option ( argument is not in the same string )
-         ((find f *opts-with-args* :TEST #'equal) T)
-         ;; Flag and argument are in the same string, space separated
-         ((find-if (lambda (a) (str-space-starts-with-p a f))
-                   *opts-with-args*)
-          T)
-         ;; Fail
-         (T NIL))))
+       (and (typecase f
+              (flag          (find (flag-opt f) *opts-with-args* :TEST #'equal))
+              (raw-flag-pair (find (car f) *opts-with-args* :TEST #'equal))
+              (string
+               (find-if (lambda (a) (str-space-starts-with-p a f))
+                        *opts-with-args*)))
+            T)))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun join-opt-args (args &key (join-char NIL))
+  "Loop over a list of ``flaggable'' elements, joining any consecutive strings
+which can be interpreted as `raw-flag-pair's into such pairs.
+Other list members are left unmodified."
   (declare (type list-of-flaggables args))
   (declare (type (or character string null) join-char))
   (the list-of-flaggables
@@ -400,13 +403,15 @@ using `builddir' as the parent directory."
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun def-flag-p (x)
-  (declare (type flaggable x))
+(defun def-flag-p (f)
+  "The ``flaggable'' parameter `F' is a C-Family ``-D<NAME>'' or
+``-D<NAME>=<VAL>'' option."
+  (declare (type flaggable f))
   (the boolean
-       (typecase x
-         (string        (str:starts-with-p "-D" x))
-         (raw-flag-pair (equal "-D" (car x)))
-         (flag          (equal "-E" (flag-opt x))))))
+       (typecase f
+         (string        (str:starts-with-p "-D" f))
+         (raw-flag-pair (equal "-D" (car f)))
+         (flag          (equal "-D" (flag-opt f))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
