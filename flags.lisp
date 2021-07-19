@@ -1,6 +1,7 @@
 
 (in-package :cl-user)
-(ql:quickload '(:compdb/types :compdb/string-utils :compdb/dirs :str))
+(ql:quickload
+ '(:compdb/types :compdb/string-utils :compdb/dirs :compdb/lang-tag :str))
 (defpackage :compdb/flags
   (:USE :common-lisp :compdb/types :compdb/lang-tag)
   (:IMPORT-FROM :compdb/string-utils #:str-append-char
@@ -34,6 +35,10 @@
    #:list-of-flaggables-p
    #:list-of-flaggables
 
+   #:as-flag
+   #:as-raw-flag-pair
+   #:as-flag-string
+
    #:spaceless-opt-arg-p
    #:inc-flag-p
    #:fixup-inc-flag-pair
@@ -42,7 +47,6 @@
    #:def-flag-p
    #:split-spaceless-flag-arg
 
-   #:as-flag
    #:flag-mark-scope
    #:flags-mark-scopes
    #:lolo-flags-mark-scopes
@@ -63,8 +67,9 @@
         list-of-flags-p
         list-of-list-of-flags-p)
  (ftype (function (flaggable &key (:NOSPACE boolean)) boolean)
-        spaceless-opt-arg-p)
- (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p def-flag-p)
+        spaceless-opt-arg-p
+        def-flag-p)
+ (ftype (function (flag) boolean) inc-flag-p opt-with-arg-p)
  (ftype (function (pathname flag-pair) (or flag-pair flag))
         fixup-inc-flag-pair)
  (ftype (function (list-of-flags flag) boolean) flag-mark-scope)
@@ -142,17 +147,24 @@
          list-of-flaggables)
         join-opt-args)
  (ftype (function (flaggable) flaggable) split-spaceless-flag-arg)
- (ftype (function (flaggable) flag) as-flag))
+ (ftype (function (flaggable &key (:LANG-FB (or lang-tag null))
+                                  (:SCOPE-FB (or flag-scope null)))
+                  flag) as-flag)
+ (ftype (function (flaggable) raw-flag-pair) as-raw-flag-pair)
+ (ftype (function (flaggable) string) as-flag-string))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun as-flag (x &key (lang-fb NIL) (scope-fb NIL))
+  "Convert a `flaggable' argument to a `flag', using the optional fall-back keys
+`lang-fb' and `scope-fb' for `:LANG' and `:SCOPE' values respectively.
+An error is thrown when conversion is not possible."
   (declare (type flaggable x))
   (declare (type (or lang-tag null) lang-fb))
   (declare (type (or flag-scope null) scope-fb))
   (the flag
-       (typecase x
+       (etypecase x
          (flag          x)
          (raw-flag-pair (make-flag :OPT   (car x)
                                    :ARG   (cdr x)
@@ -161,6 +173,43 @@
          (string        (make-flag :OPT   x
                                    :LANG  lang-fb
                                    :SCOPE scope-fb)))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun as-raw-flag-pair (x)
+  "Convert a `flaggable' argument to a raw flag pair, throwing an error in cases
+where conversion is not possible."
+  (declare (type flaggable x))
+  (the raw-flag-pair
+       (etypecase x
+         (raw-flag-pair  x)
+         (flag           (cons (the string (flag-opt x))
+                               (the string (flag-arg x))))
+         (string
+          (let ((maybe-split (split-spaceless-flag-arg x)))
+            (etypecase maybe-split
+              (raw-flag-pair maybe-split)
+              (flag          (cons (the string (flag-opt maybe-split))
+                                   (the string (flag-arg maybe-split))))))))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun as-flag-string (x)
+  "Convert a `flaggable' argument to a string.
+In cases where arguments are present a space separator will be used to create a
+SINGLE string output.
+Note that this will not reproduce the original argument list, which separates
+options and arguments as separate strings.
+An error is thrown when conversion is not possible."
+  (declare (type flaggable x))
+  (the string
+       (etypecase x
+         (string        x)
+         (flag          (concatenate 'string (flag-opt x) " " (flag-arg x)))
+         (raw-flag-pair (if (null (cdr x)) (car x)
+                            (concatenate 'string (car x) " " (cadr x)))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -221,15 +270,17 @@
    ))
 
 (defun inc-flag-p (f)
-  (declare (type flag f))
-  (the boolean (str:starts-with-p "-i"
-                                  (the string (if (stringp f) f (car f)))
-                                  :IGNORE-CASE T)))
+  (declare (type flaggable f))
+  (let ((optstr (the string (typecase f
+                              (flag          (flag-opt f))
+                              (raw-flag-pair (car f))
+                              (string        f)))))
+    (the boolean (str:starts-with-p "-i" optstr :IGNORE-CASE T))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-;; FIXME: Use dirpath
+;; FIXME: Use dirpath, use `flag' instead of `scoped-flag'
 (defun fixup-inc-flag-pair (builddir fpair)
   "Given a `(FLAG . RELATIVE-DIR)' pair, make directory absolute
 using `builddir' as the parent directory."
@@ -315,10 +366,13 @@ using `builddir' as the parent directory."
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun def-flag-p (f)
-  (declare (type flag f))
-  (the boolean (if (stringp f) (str:starts-with-p "-D" f)
-                   (equal "-D" (car f)))))
+(defun def-flag-p (x)
+  (declare (type flaggable x))
+  (the boolean
+       (typecase x
+         (string        (str:starts-with-p "-D" x))
+         (raw-flag-pair (equal "-D" (car x)))
+         (flag          (equal "-E" (flag-opt x))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
