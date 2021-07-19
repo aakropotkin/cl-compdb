@@ -53,25 +53,13 @@
 
    #:flag-mark-scope
    #:flags-mark-scopes
+   #:lolo-flags-get-common
    #:lolo-flags-mark-scopes
    ))
 
 (in-package :compdb/flags)
 
 
-;; ========================================================================== ;;
-;;
-;; TODO:
-;; [ ] `scoped-flag-mark-scope' needs to be updated to use `flag' instead
-;;     of `scoped-flag'.
-;;
-;; [ ] `scoped-flags-mark-scopes' needs to be updated to use `flag' instead
-;;     of `scoped-flag'.
-;;
-;; [ ] `lolo-scoped-flags-mark-scopes' needs to be updated to use `flag'
-;;     instead of `scoped-flag'.
-;;
-;;
 ;; ========================================================================== ;;
 
 (declaim
@@ -87,10 +75,10 @@
         spaceless-opt-arg-p)
  (ftype (function (flaggable) boolean) def-flag-p inc-flag-p opt-with-arg-p)
  (ftype (function (dirpath flag-pair) flag-pair) fixup-inc-flag-pair)
- (ftype (function (list-of-flags flag) boolean) flag-mark-scope)
- (ftype (function (list-of-flags list-of-flag) T) flag-mark-scopes)
- (ftype (function (list-of-list-of-flags) list-of-flags)
-        lolo-flags-mark-scopes))
+ (ftype (function (list-of-flags flag) flag-scope) flag-mark-scope)
+ (ftype (function (list-of-flags list-of-flags) T) flag-mark-scopes)
+ (ftype (function (list-of-list-of-flags) list-of-flags) lolo-flags-get-common)
+ (ftype (function (list-of-list-of-flags) T) lolo-flags-mark-scopes))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -441,37 +429,54 @@ Leave non-strings and strings which do not satisfy
 
 ;; -------------------------------------------------------------------------- ;;
 
-;(defun scoped-flag-mark-scope (common-sflags sf)
-;  "The ``scope'' of flags in `common-flags' is actually irrelevant, since they
-;represent a hierarchy of ownership.
-;Local flags should be those that are not in any ancestors."
-;  (declare (type list-of-scoped-flags common-sflags))
-;  (declare (type scoped-flag sf))
-;  (setf (scoped-flag-local sf)
-;        (null (find (scoped-flag-flag sf) common-sflags :KEY  #'scoped-flag-flag
-;                                                        :TEST #'equal))))
+(defun flag-mark-scope (common-flags f)
+  "The ``scope'' of flags in `common-flags' is actually irrelevant, since they
+represent a hierarchy of ownership.
+Local flags should be those that are not in any ancestors."
+  (declare (type list-of-flags common-flags))
+  (declare (type flag f))
+  (setf (flag-scope f)
+        (if (null (find-if (lambda (o) (and
+                                        (equal (flag-opt f) (flag-opt o))
+                                        (equal (flag-arg f) (flag-arg o))
+                                        (equal (flag-lang f) (flag-lang o))))
+                           common-flags))
+            :LOCAL
+            :COMMON)))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-;(defun scoped-flags-mark-scopes (common-sflags sflags)
-;  (declare (type list-of-scoped-flags common-sflags sflags))
-;  (mapc (lambda (sf) (scoped-flag-mark-scope common-sflags sf)) sflags))
+(defun flags-mark-scopes (common-flags flags)
+  (declare (type list-of-flags common-flags flags))
+  (mapc (lambda (f) (flag-mark-scope common-flags f)) flags))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-;(defun lolo-scoped-flags-mark-scopes (sflagss)
-;  "From a collection of siblings, discover common flags, and set scopes.
-;Returns a `list-of-scoped-flags' of ``common'' flags
-;( initialized with default scope )."
-;  (declare (type list-of-list-of-scoped-flags sflagss))
-;  (let* ((flagss  (mapcar (lambda (sfs) (mapcar #'as-flag sfs)) sflagss))
-;         (common  (reduce (lambda (a b) (intersection a b :TEST #'equal))
-;                          flagss))
-;         (sf-comm (mapcar (lambda (f) (make-scoped-flag :FLAG f)) common)))
-;    (mapc (lambda (sf) (scoped-flags-mark-scopes sf-comm sf)) sflagss)
-;    sf-comm))
+(defun lolo-flags-get-common (flagss)
+  "Discover the collection of common flags from a group of flag lists."
+  (flet ((unscoped-flags-eq (a b)
+           (the boolean (and (equal (flag-opt a) (flag-opt b))
+                             (equal (flag-arg a) (flag-arg b))
+                             (equal (flag-lang a) (flag-lang b))))))
+    (mapcar (lambda (f) (make-flag :OPT   (flag-opt f)
+                                   :ARG   (flag-arg f)
+                                   :LANG  (flag-lang f)
+                                   :SCOPE :COMMON))
+            (reduce (lambda (a b) (intersection a b :TEST #'unscoped-flags-eq))
+                    flagss))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun lolo-flags-mark-scopes (flagss)
+  "From a collection of siblings, discover common flags, and set scopes.
+Returns a `list-of-flags' of ``common'' flags
+( initialized with default scope )."
+  (declare (type list-of-list-of-flags flagss))
+  (let ((commons (the list-of-flags (lolo-flags-get-common flagss))))
+    (mapc (lambda (f) (flags-mark-scopes commons f)) flagss)))
 
 
 ;; -------------------------------------------------------------------------- ;;
