@@ -304,7 +304,7 @@ the same the same subdir, or other `subdir' members who share a parent dir."
 This excludes the use of `--sysroot=<DIR>' options, but will recognize any other
 GCC option which is prefixed with ``-i'' or ``-I''."
   (declare (type flaggable f))
-  (let ((optstr (the string (typecase f
+  (let ((optstr (the string (etypecase f
                               (flag          (flag-opt f))
                               (raw-flag-pair (car f))
                               (string        f)))))
@@ -417,6 +417,10 @@ Other list members are left unmodified."
 ;; -------------------------------------------------------------------------- ;;
 
 (defun split-spaceless-flag-arg (f)
+  "For a ``flaggable'' parameter `F' which satisfies ``spaceless-opt-arg-p'',
+split `string' elements into `raw-flag-pair' cells.
+Leave non-strings and strings which do not satisfy
+``spaceless-opt-arg-p''unmodified."
   (declare (type flaggable f))
   ;; If `f' isn't a string or an include flag don't change it.
   (the flaggable
