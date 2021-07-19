@@ -77,8 +77,9 @@
  (ftype (function (dirpath flag-pair) flag-pair) fixup-inc-flag-pair)
  (ftype (function (list-of-flags flag) flag-scope) flag-mark-scope)
  (ftype (function (list-of-flags list-of-flags) T) flag-mark-scopes)
- (ftype (function (list-of-list-of-flags) list-of-flags) lolo-flags-get-common)
- (ftype (function (list-of-list-of-flags) T) lolo-flags-mark-scopes))
+ (ftype (function (list-of-list-of-flags) list-of-flags)
+        lolo-flags-get-common
+        lolo-glags-mark-scopes))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -455,7 +456,9 @@ Local flags should be those that are not in any ancestors."
 ;; -------------------------------------------------------------------------- ;;
 
 (defun lolo-flags-get-common (flagss)
-  "Discover the collection of common flags from a group of flag lists."
+  "Discover the collection of common flags from a group of flag lists.
+Equality is based on equality of all `flag' fields except for `scope'.
+Returns a `list-of-flags' of ``common'' flags."
   (flet ((unscoped-flags-eq (a b)
            (the boolean (and (equal (flag-opt a) (flag-opt b))
                              (equal (flag-arg a) (flag-arg b))
@@ -472,11 +475,12 @@ Local flags should be those that are not in any ancestors."
 
 (defun lolo-flags-mark-scopes (flagss)
   "From a collection of siblings, discover common flags, and set scopes.
-Returns a `list-of-flags' of ``common'' flags
-( initialized with default scope )."
+Equality is based on equality of all `flag' fields except for `scope'.
+Returns a `list-of-flags' of ``common'' flags."
   (declare (type list-of-list-of-flags flagss))
   (let ((commons (the list-of-flags (lolo-flags-get-common flagss))))
-    (mapc (lambda (f) (flags-mark-scopes commons f)) flagss)))
+    (mapc (lambda (f) (flags-mark-scopes commons f)) flagss)
+    commons))
 
 
 ;; -------------------------------------------------------------------------- ;;
