@@ -5,6 +5,7 @@
   (:USE :common-lisp :prove :compdb/flags)
   (:EXPORT
    #:test-raw-flag-pair-t
+   #:test-flag-pair-t
    #:test-raw-flaggable-t
    #:test-raw-list-of-flaggables
    #:run-test-flags))
@@ -14,17 +15,17 @@
 ;; ========================================================================== ;;
 
 (defun test-raw-flag-pair-t ()
-    (subtest "Test `flag-pair' type."
-      (ok (flag-pair-p (cons "foo" "bar")))
-      (ok (flag-pair-p (cons "foo" #P"bar")))
-      (ok (not (flag-pair-p (cons #P"bar" "foo"))))
-      (ok (not (flag-pair-p (cons "foo" 4))))
-      (is-type (cons "foo" "bar") 'flag-pair)
-      (is-type (cons "foo" #P"bar") 'flag-pair)
-      (ok (typep (cons "foo" "bar") 'flag-pair))
-      (ok (typep (cons "foo" #P"bar") 'flag-pair))
-      (ok (not (typep (cons #P"bar" "foo") 'flag-pair)))
-      (ok (not (typep (cons "foo" 4) 'flag-pair)))))
+  (subtest "Test `flag-pair' type on actual pairs."
+    (ok (flag-pair-p (cons "foo" "bar")))
+    (ok (flag-pair-p (cons "foo" #P"bar")))
+    (ok (not (flag-pair-p (cons #P"bar" "foo"))))
+    (ok (not (flag-pair-p (cons "foo" 4))))
+    (is-type (cons "foo" "bar") 'flag-pair)
+    (is-type (cons "foo" #P"bar") 'flag-pair)
+    (ok (typep (cons "foo" "bar") 'flag-pair))
+    (ok (typep (cons "foo" #P"bar") 'flag-pair))
+    (ok (not (typep (cons #P"bar" "foo") 'flag-pair)))
+    (ok (not (typep (cons "foo" 4) 'flag-pair)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -40,21 +41,48 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun test-flag-pair-t ()
+  (subtest "Test `flag-pair' type."
+    (ok (every #'flaggable-p *raw-flag-pairs*))
+    (ok (notany #'flaggable-p *not-raw-flag-pairs*))
+    (ok (flag-pair-p (make-flag :OPT "foo" :ARG "bar")))
+    (ok (flag-pair-p (make-flag :OPT "foo" :ARG #P"bar")))
+    (ok (not (flag-pair-p (make-flag :OPT "foo"))))
+    (ok (not (flag-pair-p (make-flag :OPT "foo" :SCOPE :COMMON))))
+    (is-type (make-flag :OPT "foo" :ARG "bar") 'flag-pair)
+    (is-type (make-flag :OPT "foo" :ARG #P"bar") 'flag-pair)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defparameter *flag-pairs*
+  (append *raw-flag-pairs*
+          (list (make-flag :OPT "foo" :ARG "bar")
+                (make-flag :OPT "foo" :ARG #P"bar"))))
+
+(defparameter *not-flag-pairs*
+  (append *not-raw-flag-pairs*
+          (list (make-flag :OPT "foo")
+                (make-flag :OPT "foo" :SCOPE :COMMON))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun test-raw-flaggable-t ()
-    (subtest "Test `flaggable' type."
-      (ok (flaggable-p "foo"))
-      (is-type "foo" 'flaggable)
-      (ok (typep "foo" 'flaggable))
-      (ok (every #'flaggable-p *raw-flag-pairs*))
-      (ok (notany #'flaggable-p *not-raw-flag-pairs*))
-      (ok (not (flaggable-p 4)))
-      (ok (not (typep 4 'flaggable)))
-      (ok (not (flaggable-p 'foo)))
-      (ok (not (typep 'foo 'flaggable)))
-      (is-type (cons "foo" "bar") 'flaggable)
-      (ok (typep (cons "foo" "bar") 'flaggable))
-      (is-type (cons "foo" #P"bar") 'flaggable)
-      (ok (typep (cons "foo" #P"bar") 'flaggable))))
+  (subtest "Test `flaggable' type on `string's and `raw-flar-pair's."
+    (ok (flaggable-p "foo"))
+    (is-type "foo" 'flaggable)
+    (ok (typep "foo" 'flaggable))
+    (ok (every #'flaggable-p *raw-flag-pairs*))
+    (ok (notany #'flaggable-p *not-raw-flag-pairs*))
+    (ok (not (flaggable-p 4)))
+    (ok (not (typep 4 'flaggable)))
+    (ok (not (flaggable-p 'foo)))
+    (ok (not (typep 'foo 'flaggable)))
+    (is-type (cons "foo" "bar") 'flaggable)
+    (ok (typep (cons "foo" "bar") 'flaggable))
+    (is-type (cons "foo" #P"bar") 'flaggable)
+    (ok (typep (cons "foo" #P"bar") 'flaggable))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -77,6 +105,7 @@
 
 (defun run-test-flags ()
   (test-raw-flag-pair-t)
+  (test-flag-pair-t)
   (test-raw-flaggable-t)
   (test-raw-list-of-flaggables))
 
