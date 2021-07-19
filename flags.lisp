@@ -100,6 +100,7 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun flag-scope-p (x)
+  "The argument `X' is a flag scope keyword?"
   (and (member x (list :LOCAL :COMMON))
        T))
 
@@ -122,6 +123,8 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun raw-flag-pair-p (x)
+  "Argument `X' is a `cons' cell with a string `car', and either a `string' or
+`path' as its `cdr'?"
   (the boolean (and (consp x)
                     (stringp (car x))
                     (or (stringp (cdr x))
@@ -135,6 +138,7 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun flag-pair-p (x)
+  "Argument `X' is of type `flag', or is explicitly a `raw-flag-pair'?"
   (the boolean (or (raw-flag-pair-p x)
                    (and (flag-p x)
                         (not (null (flag-arg x)))
@@ -147,6 +151,11 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun flaggable-p (x)
+  "It is possible to interpret `X' as a flag?
+More explicitly `X' is already a `flag', or `X' may be converted to `flag' by
+the `as-flag' function.
+Notably no checking is performed to see if `string' inputs are actually valid
+compiler or linker flags, only type checking is performed."
   (the boolean (and (or (stringp x)
                         (flag-p x)
                         (raw-flag-pair-p x))
@@ -234,12 +243,18 @@ An error is thrown when conversion is not possible."
 ;; -------------------------------------------------------------------------- ;;
 
 (defun flag-local-p (f)
+  "A flag `F' is marked as `:LOCAL' scoped.
+This indicated this flag differs from siblings - being other `cunit' members in
+the same the same subdir, or other `subdir' members who share a parent dir."
   (declare (type flag f))
   (let ((s (flag-scope f)))
     (the boolean (and s (eq s :LOCAL)))))
 
 
 (defun flag-common-p (f)
+  "A flag `F' is marked as `:COMMON' scoped.
+This indicated this flag is shared by siblings - being other `cunit' members in
+the same the same subdir, or other `subdir' members who share a parent dir."
   (declare (type flag f))
   (let ((s (flag-scope f)))
     (the boolean (and s (eq s :COMMON)))))
