@@ -12,8 +12,8 @@
 
    #:directory-pathname-p
    #:directory-pathname
-   #:list-of-directory-pathname-p
-   #:list-of-directory-pathname
+   #:list-of-directory-pathnames-p
+   #:list-of-directory-pathnames
 
    #:dirpath-p
    #:dirpath
@@ -47,7 +47,7 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun directory-compenent-head-p (x)
+(defun directory-component-head-p (x)
   (and (keywordp x)
        (member x '(:RELATIVE :ABSOLUTE))))
 
@@ -56,7 +56,7 @@
        (or (directory-component-head-p x)
            (member x '(:UP :BACK :WILD :WILD-INFERIORS :UNSPECIFIC)))))
 
-(defun directory-compenent-elem-p (x)
+(defun directory-component-elem-p (x)
   (or (directory-compenent-keyword-p x)
       (stringp x)))
 
