@@ -8,6 +8,8 @@
    #:test-list-of-directory-components-t
    #:test-directory-pathname-t
    #:test-list-of-directory-pathnames-t
+   #:test-dirpath-t
+   #:test-list-of-dirpaths-t
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -46,11 +48,37 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun test-dirpath-t ()
+  (subtest "Test `dirpath' type."
+    (is-type (list :RELATIVE "foo") 'dirpath)
+    (is-type (parse-namestring "foo/") 'dirpath)
+    (is-type "foo/" 'dirpath)
+    (dirpath-p (list :RELATIVE "foo"))
+    (dirpath-p (parse-namestring "foo/"))
+    (dirpath-p "foo/")))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-list-of-dirpaths-t ()
+  (subtest "Test `list-of-dirpaths' type."
+    (is-type (list (list :RELATIVE "foo")) 'list-of-dirpaths)
+    (is-type (list (parse-namestring "foo/")) 'list-of-dirpaths)
+    (is-type (list "foo/") 'list-of-dirpaths)
+    (list-of-dirpaths-p (list (list :RELATIVE "foo")))
+    (list-of-dirpaths-p (list (parse-namestring "foo/")))
+    (list-of-dirpaths-p (list "foo/"))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun run-test-dirs ()
   (test-directory-component-t)
   (test-list-of-directory-components-t)
   (test-directory-pathname-t)
-  (test-list-of-directory-pathnames-t))
+  (test-list-of-directory-pathnames-t)
+  (test-dirpath-t)
+  (test-list-of-dirpaths-t))
 
 
 ;; -------------------------------------------------------------------------- ;;
