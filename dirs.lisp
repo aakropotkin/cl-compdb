@@ -97,6 +97,7 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun path-p (x)
+  "A `pathname', `dirpath', or `string' which can be parsed as a `pathname'."
   (or (pathnamep x)
       (dirpath-p x)
       (and (stringp x)
