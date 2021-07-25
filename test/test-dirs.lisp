@@ -14,6 +14,8 @@
    #:test-list-of-paths-t
    #:test-as-pathname
    #:test-as-directory-component
+   #:test-join-pathnames
+   #:test-parse-dir-namestring
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -124,6 +126,25 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun test-join-pathnames ()
+  (subtest "Test `join-pathnames' function."
+    (is-type (join-pathnames "foo/" "bar") 'pathname)
+    (ok (equal (parse-namestring "foo/bar") (join-pathnames "foo/" "bar")))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-parse-dir-namestring ()
+  (subtest "Test `parse-dir-namestring' function"
+    (is-type (parse-dir-namestring "foo/bar/") 'pathname)
+    (is-type (parse-dir-namestring "foo/bar") 'pathname)
+    (is-type (parse-dir-namestring "foo/bar/") 'directory-pathname)
+    (is-type (parse-dir-namestring "foo/bar") 'directory-pathname)
+    ))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun run-test-dirs ()
   (test-directory-component-t)
   (test-list-of-directory-components-t)
@@ -134,7 +155,9 @@
   (test-path-t)
   (test-list-of-paths-t)
   (test-as-pathname)
-  (test-as-directory-component))
+  (test-as-directory-component)
+  (test-join-pathnames)
+  (test-parse-dir-namestring))
 
 
 ;; -------------------------------------------------------------------------- ;;
