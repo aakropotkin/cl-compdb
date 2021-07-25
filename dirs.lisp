@@ -213,7 +213,8 @@ When `direct' is `T', detect direct children."
     ((and direct (null (pathname-name sub)))
      (pathname-match-p sub (merge-pathnames (parse-dir-namestring "*/") dir)))
     ;; Is `sub' a file in `dir'?
-    (direct (equal (as-directory-component dir) (as-directory-component sub)))
+    (direct (equal (simplify-directory-component (as-directory-component dir))
+                   (simplify-directory-component (as-directory-component sub))))
     ;; Is `sub' a file or directory in the subtree of `dir'?
     (T (pathname-match-p sub (uiop:wilden (as-pathname dir))))))
 
