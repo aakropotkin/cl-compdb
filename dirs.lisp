@@ -157,7 +157,8 @@
           :HOST      (pathname-host try)
           :NAME      NIL
           :TYPE      NIL
-          :DIRECTORY (append (pathname-directory try) (list try-name))
+          :DIRECTORY (append (or (pathname-directory try) (list :RELATIVE))
+                             (list try-name))
           :DEVICE    (pathname-device try)
           :VERSION   (pathname-version try)))))
 

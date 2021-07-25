@@ -140,6 +140,7 @@
     (is-type (parse-dir-namestring "foo/bar") 'pathname)
     (is-type (parse-dir-namestring "foo/bar/") 'directory-pathname)
     (is-type (parse-dir-namestring "foo/bar") 'directory-pathname)
+    (is-type (parse-dir-namestring "foo bar") 'directory-pathname)
     ))
 
 
