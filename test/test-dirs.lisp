@@ -14,6 +14,7 @@
    #:test-list-of-paths-t
    #:test-as-pathname
    #:test-as-directory-component
+   #:test-simplify-path
    #:test-simplify-directory-component
    #:test-join-pathnames
    #:test-parse-dir-namestring
@@ -145,6 +146,18 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun test-simplify-path ()
+  (subtest "Test `simplify-path' function."
+    (ok (equal (simplify-path "foo/bar/../baz") "foo/baz"))
+    (ok (equal (simplify-path #P"foo/bar/../baz") #P"foo/baz"))
+    (ok (equal (simplify-path (list :RELATIVE "foo" "bar" :BACK "baz"))
+               (list :RELATIVE "foo" "baz")))
+    (ok (equal (simplify-path (list :RELATIVE "foo" "bar" :UP "baz"))
+               (list :RELATIVE "foo" "baz")))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun test-join-pathnames ()
   (subtest "Test `join-pathnames' function."
     (is-type (join-pathnames "foo/" "bar") 'pathname)
@@ -233,6 +246,7 @@
   (test-as-pathname)
   (test-as-directory-component)
   (test-simplify-directory-component)
+  (test-simplify-path)
   (test-join-pathnames)
   (test-parse-dir-namestring)
   (test-subpath-p))

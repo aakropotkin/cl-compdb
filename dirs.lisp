@@ -29,6 +29,7 @@
    #:as-directory-component
 
    #:simplify-directory-component
+   #:simplify-path
 
    #:join-pathnames
    #:parse-dir-namestring
@@ -158,6 +159,26 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun simplify-path (p)
+  (declare (type path p))
+  (the path
+       (etypecase p
+         (pathname (make-pathname
+                    :DIRECTORY (directory-component-ups-as-backs
+                                (pathname-directory p))
+                    :DEFAULTS p))
+         (directory-component (simplify-directory-component p))
+         (string   (let* ((pname  (parse-namestring p))
+                          (dc     (pathname-directory pname))
+                          (sdc    (simplify-directory-component dc))
+                          (spname (make-pathname
+                                   :DIRECTORY sdc
+                                   :DEFAULTS pname)))
+                     (namestring spname))))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun join-pathnames (&rest args)
   (declare (type list-of-paths args))
   ;;(assert (list-of-dirpaths-p (butlast args)))
@@ -173,13 +194,11 @@
          (try-name (pathname-name try)))
     (if (null try-name) try
          (make-pathname
-          :HOST      (pathname-host try)
           :NAME      NIL
           :TYPE      NIL
           :DIRECTORY (append (or (pathname-directory try) (list :RELATIVE))
                              (list try-name))
-          :DEVICE    (pathname-device try)
-          :VERSION   (pathname-version try)))))
+          :DEFAULTS try))))
 
 
 ;; -------------------------------------------------------------------------- ;;
