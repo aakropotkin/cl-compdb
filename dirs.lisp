@@ -44,6 +44,23 @@
 
 ;; ========================================================================== ;;
 
+(declaim
+ (ftype (function (T) boolean)
+        directory-component-head-p
+        directory-compenent-keyword-p
+        directory-component-elem-p
+        directory-component-p
+        directory-pathname-p
+        dirpath-p
+        path-p
+        list-of-directory-components-p
+        list-of-directory-pathnames-p
+        list-of-dirpaths-p
+        list-of-paths-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defparameter *dir-sep-str*
   (string (uiop:directory-separator-for-host)))
 
@@ -52,12 +69,14 @@
 
 (defun directory-component-head-p (x)
   (and (keywordp x)
-       (member x '(:RELATIVE :ABSOLUTE))))
+       (member x '(:RELATIVE :ABSOLUTE))
+       T))
 
 (defun directory-compenent-keyword-p (x)
   (and (keywordp x)
        (or (directory-component-head-p x)
-           (member x '(:UP :BACK :WILD :WILD-INFERIORS :UNSPECIFIC)))))
+           (member x '(:UP :BACK :WILD :WILD-INFERIORS :UNSPECIFIC)))
+       T))
 
 (defun directory-component-elem-p (x)
   (or (directory-compenent-keyword-p x)
@@ -70,6 +89,15 @@
 
 (deftype directory-component ()
   `(satisfies directory-component-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(declaim
+ (ftype (function (directory-component) directory-component))
+ (ftype (function (path) directory-component) as-directory-component)
+ (ftype (function (directory-component) directory-component)
+        simplify-directory-component))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -130,22 +158,35 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(declaim
+ (ftype (function (path) pathname) as-pathname)
+ (ftype (function (path) path) simplify-path)
+ ;; FIXME: find out `ftype' for `&rest'
+ ;(ftype (function (list-of-paths) pathname) join-pathnames)
+ ; FIXME: parse-dir-namestring
+ )
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun as-pathname (x)
-  (declare (type (or pathname string directory-component) x))
-  (typecase x
-    (pathname            x)
-    (string              (parse-namestring x))
-    (directory-component (make-pathname :DIRECTORY x))))
+  (declare (type path x))
+  (the pathname
+       (etypecase x
+         (pathname            x)
+         (string              (parse-namestring x))
+         (directory-component (make-pathname :DIRECTORY x)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun as-directory-component (x)
-  (declare (type (or pathname string dirpath) x))
-  (typecase x
-    (pathname            (pathname-directory x))
-    (string              (pathname-directory (parse-namestring x)))
-    (directory-component x)))
+  (declare (type (path) x))
+  (the directory-component
+       (etypecase x
+         (pathname            (pathname-directory x))
+         (string              (pathname-directory (parse-namestring x)))
+         (directory-component x))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -183,25 +224,37 @@
   (declare (type list-of-paths args))
   ;;(assert (list-of-dirpaths-p (butlast args)))
   (let ((arg-pathnames (mapcar #'as-pathname args)))
-    (reduce (lambda (p1 p2) (merge-pathnames p2 p1)) arg-pathnames)))
+    (the pathname
+         (reduce (lambda (p1 p2) (merge-pathnames p2 p1)) arg-pathnames))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun parse-dir-namestring (ns)
+(defun parse-dir-namestring (ns &key (simple T))
   (declare (type string ns))
+  (declare (type boolean simple))
   (let* ((try      (parse-namestring ns))
          (try-name (pathname-name try)))
     (if (null try-name) try
+        (let ((dc (append (or (pathname-directory try) (list :RELATIVE))
+                          (list try-name))))
          (make-pathname
           :NAME      NIL
-          :TYPE      NIL
-          :DIRECTORY (append (or (pathname-directory try) (list :RELATIVE))
-                             (list try-name))
-          :DEFAULTS try))))
+          ;:TYPE      NIL
+          :DIRECTORY (if simple
+                         (simplify-directory-component dc)
+                         dc)
+          :DEFAULTS  try)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
+
+;(defun direct-subpath-p (dir sub)
+;  (declare (type dirpath dir))
+;  (declare (type path sub))
+;  (let ((dpath ()))
+;    (uiop:sub)))
+
 
 (defun subpath-p (dir sub &key (direct NIL))
   "Is `sub' a subdirectory of `dir'?
@@ -209,6 +262,7 @@ When `direct' is `T', detect direct children."
   (declare (type dirpath  dir))
   (declare (type path sub))
   (declare (type boolean  direct))
+  (let (()))
   (cond
     ((and direct (null (pathname-name sub)))
      (pathname-match-p sub (merge-pathnames (parse-dir-namestring "*/") dir)))
