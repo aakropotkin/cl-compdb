@@ -166,11 +166,12 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun subpath-p (dir sub &key (direct NIL))
+  "Is `sub' a subdirectory of `dir'?
+When `direct' is `T', detect direct children."
   (declare (type dirpath  dir))
   (declare (type path sub))
   (declare (type boolean  direct))
   (cond
-    ;; Is `sub' a subdirectory of `dir'?
     ((and direct (null (pathname-name sub)))
      (pathname-match-p sub (merge-pathnames (parse-dir-namestring "*/") dir)))
     ;; Is `sub' a file in `dir'?

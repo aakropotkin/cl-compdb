@@ -16,6 +16,7 @@
    #:test-as-directory-component
    #:test-join-pathnames
    #:test-parse-dir-namestring
+   #:test-subpath-p
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -140,8 +141,18 @@
     (is-type (parse-dir-namestring "foo/bar") 'pathname)
     (is-type (parse-dir-namestring "foo/bar/") 'directory-pathname)
     (is-type (parse-dir-namestring "foo/bar") 'directory-pathname)
-    (is-type (parse-dir-namestring "foo bar") 'directory-pathname)
-    ))
+    (is-type (parse-dir-namestring "foo bar") 'directory-pathname)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-subpath-p ()
+  (subtest "Test `subpath-p' function."
+    (ok (subpath-p "foo/" "foo/bar/baz"))
+    (ok (not (subpath-p "foo/" "quux/bar/baz")))
+    (ok (not (subpath-p "foo/" "foo/bar/baz" :DIRECT T)))
+    (ok (subpath-p "foo/" "foo/bar" :DIRECT T))
+    (ok (subpath-p "foo/" "foo/bar/" :DIRECT T))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -158,7 +169,8 @@
   (test-as-pathname)
   (test-as-directory-component)
   (test-join-pathnames)
-  (test-parse-dir-namestring))
+  (test-parse-dir-namestring)
+  (test-subpath-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
