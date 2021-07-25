@@ -12,6 +12,8 @@
    #:test-list-of-dirpaths-t
    #:test-path-t
    #:test-list-of-paths-t
+   #:test-as-pathname
+   #:test-as-directory-component
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -76,28 +78,48 @@
 
 (defun test-path-t ()
   (subtest "Test `path' type."
-     (is-type "foo/" 'path)
-     (is-type (list :RELATIVE "foo") 'path)
-     (is-type (parse-namestring "foo/") 'path)
-     (is-type (parse-namestring "foo/bar") 'path)
-     (path-p "foo/")
-     (path-p (list :RELATIVE "foo"))
-     (path-p (parse-namestring "foo/"))
-     (path-p (parse-namestring "foo/bar"))))
+    (is-type "foo/" 'path)
+    (is-type (list :RELATIVE "foo") 'path)
+    (is-type (parse-namestring "foo/") 'path)
+    (is-type (parse-namestring "foo/bar") 'path)
+    (path-p "foo/")
+    (path-p (list :RELATIVE "foo"))
+    (path-p (parse-namestring "foo/"))
+    (path-p (parse-namestring "foo/bar"))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun test-list-of-paths-t ()
   (subtest "Test `list-of-paths' type."
-     (is-type (list "foo/") 'list-of-paths)
-     (is-type (list (list :RELATIVE "foo")) 'list-of-paths)
-     (is-type (list (parse-namestring "foo/")) 'list-of-paths)
-     (is-type (list (parse-namestring "foo/bar")) 'list-of-paths)
-     (list-of-paths-p (list "foo/"))
-     (list-of-paths-p (list (list :RELATIVE "foo")))
-     (list-of-paths-p (list (parse-namestring "foo/")))
-     (list-of-paths-p (list (parse-namestring "foo/bar")))))
+    (is-type (list "foo/") 'list-of-paths)
+    (is-type (list (list :RELATIVE "foo")) 'list-of-paths)
+    (is-type (list (parse-namestring "foo/")) 'list-of-paths)
+    (is-type (list (parse-namestring "foo/bar")) 'list-of-paths)
+    (list-of-paths-p (list "foo/"))
+    (list-of-paths-p (list (list :RELATIVE "foo")))
+    (list-of-paths-p (list (parse-namestring "foo/")))
+    (list-of-paths-p (list (parse-namestring "foo/bar")))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-as-pathname ()
+  (subtest "Test `as-pathname' function."
+    (is-type (as-pathname "foo/") 'pathname)
+    (is-type (as-pathname (parse-namestring "foo/")) 'pathname)
+    (is-type (as-pathname (list :RELATIVE "foo")) 'pathname)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-as-directory-component ()
+  (subtest "Test `as-directory-component' function."
+    (is-type (as-directory-component "foo/") 'directory-component)
+    (is-type (as-directory-component (list :RELATIVE "foo"))
+             'directory-component)
+    (is-type (as-directory-component (parse-namestring "foo/"))
+             'directory-component)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -110,7 +132,9 @@
   (test-dirpath-t)
   (test-list-of-dirpaths-t)
   (test-path-t)
-  (test-list-of-paths-t))
+  (test-list-of-paths-t)
+  (test-as-pathname)
+  (test-as-directory-component))
 
 
 ;; -------------------------------------------------------------------------- ;;
