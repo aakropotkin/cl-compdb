@@ -14,6 +14,7 @@
    #:test-list-of-paths-t
    #:test-as-pathname
    #:test-as-directory-component
+   #:test-simplify-directory-component
    #:test-join-pathnames
    #:test-parse-dir-namestring
    #:test-subpath-p
@@ -111,7 +112,12 @@
   (subtest "Test `as-pathname' function."
     (is-type (as-pathname "foo/") 'pathname)
     (is-type (as-pathname (parse-namestring "foo/")) 'pathname)
-    (is-type (as-pathname (list :RELATIVE "foo")) 'pathname)))
+    (is-type (as-pathname (list :RELATIVE "foo")) 'pathname)
+    ;; Note that `:BACK' is "simplified" while `:UP' is not.
+    (ok (equal (as-pathname (list :RELATIVE "foo" "bar" :BACK "baz"))
+               (as-pathname (list :RELATIVE "foo" "baz"))))
+    (ok (not (equal (as-pathname (list :RELATIVE "foo" "bar" :UP "baz"))
+                    (as-pathname (list :RELATIVE "foo" "baz")))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -123,6 +129,18 @@
              'directory-component)
     (is-type (as-directory-component (parse-namestring "foo/"))
              'directory-component)))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-simplify-directory-component ()
+  (subtest "Test `simplify-directory-component' function."
+    (ok (equal (simplify-directory-component
+                (list :RELATIVE "foo" "bar" :BACK "baz"))
+               (list :RELATIVE "foo" "baz")))
+    (ok (equal (simplify-directory-component
+                (list :RELATIVE "foo" "bar" :UP "baz"))
+               (list :RELATIVE "foo" "baz")))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -152,7 +170,53 @@
     (ok (not (subpath-p "foo/" "quux/bar/baz")))
     (ok (not (subpath-p "foo/" "foo/bar/baz" :DIRECT T)))
     (ok (subpath-p "foo/" "foo/bar" :DIRECT T))
-    (ok (subpath-p "foo/" "foo/bar/" :DIRECT T))))
+    (ok (subpath-p "foo/" "foo/bar/" :DIRECT T))
+    (let ((dir1 (list :RELATIVE "foo"))
+          (dir2 (list :RELATIVE "foo" "bar"))
+          (dir3 (list :RELATIVE "baz"))
+          (dir4 (list :ABSOLUTE "foo"))
+          (dir5 (list :RELATIVE "baz" "bakk" :BACK))
+          (dir6 (list :RELATIVE "baz" "bakk" :UP))
+          (dir7 (list :RELATIVE "baz" "bakk" :BACK "billy"))
+          (dir8 (list :RELATIVE "baz" "bakk" :UP "sally")))
+      (ok (subpath-p dir1 (as-pathname dir2)))
+      (ok (not (subpath-p dir1 (as-pathname dir3))))
+      (ok (not (subpath-p dir1 (as-pathname dir4))))
+      (ok (subpath-p dir3 (as-pathname dir5)))  ; FIXME
+      (ok (subpath-p dir3 (as-pathname dir6)))  ; FIXME
+      (ok (subpath-p dir3 (as-pathname dir7)))
+      (ok (subpath-p dir3 (as-pathname dir8)))
+      (ok (subpath-p dir5 (as-pathname dir7)))
+      (ok (subpath-p dir5 (as-pathname dir8)))
+      (ok (subpath-p dir6 (as-pathname dir8)))
+      (ok (not (subpath-p dir6 (as-pathname dir7))))  ; FIXME
+      )))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun test-any-subpath-p ()
+  (subtest "Test `any-subpath-p' function."
+    (let ((dir1 (list :RELATIVE "foo"))
+          (dir2 (list :RELATIVE "foo" "bar"))
+          (dir3 (list :RELATIVE "baz"))
+          (dir4 (list :ABSOLUTE "foo"))
+          (dir5 (list :RELATIVE "baz" "bakk" :BACK))
+          (dir6 (list :RELATIVE "baz" "bakk" :UP))
+          (dir7 (list :RELATIVE "baz" "bakk" :BACK "billy"))
+          (dir8 (list :RELATIVE "baz" "bakk" :UP "sally")))
+      (ok (subpath-p (list dir1) (as-pathname dir2)))
+      (ok (not (subpath-p (list dir1) (as-pathname dir3))))
+      (ok (not (subpath-p (list dir1) (as-pathname dir4))))
+      (ok (subpath-p (list dir3) (as-pathname dir5)))  ; FIXME
+      (ok (subpath-p (list dir3) (as-pathname dir6)))  ; FIXME
+      (ok (subpath-p (list dir3) (as-pathname dir7)))
+      (ok (subpath-p (list dir3) (as-pathname dir8)))
+      (ok (subpath-p (list dir5) (as-pathname dir7)))
+      (ok (subpath-p (list dir5) (as-pathname dir8)))
+      (ok (subpath-p (list dir6) (as-pathname dir8)))
+      (ok (not (subpath-p (list dir6) (as-pathname dir7))))  ; FIXME
+      )))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -168,6 +232,7 @@
   (test-list-of-paths-t)
   (test-as-pathname)
   (test-as-directory-component)
+  (test-simplify-directory-component)
   (test-join-pathnames)
   (test-parse-dir-namestring)
   (test-subpath-p))

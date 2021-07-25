@@ -28,6 +28,8 @@
    #:as-pathname
    #:as-directory-component
 
+   #:simplify-directory-component
+
    #:join-pathnames
    #:parse-dir-namestring
 
@@ -67,6 +69,14 @@
 
 (deftype directory-component ()
   `(satisfies directory-component-p))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+(defun directory-component-ups-as-backs (dc)
+  "Replace all `:UP' elements with `:BACK' so they can be simplified."
+  (declare (type directory-component dc))
+  (subst :BACK :UP dc))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -139,6 +149,15 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
+(defun simplify-directory-component (dc)
+  (declare (type directory-component dc))
+  (the directory-component
+       (as-directory-component
+        (as-pathname (directory-component-ups-as-backs dc)))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
 (defun join-pathnames (&rest args)
   (declare (type list-of-paths args))
   ;;(assert (list-of-dirpaths-p (butlast args)))
@@ -187,6 +206,8 @@ When `direct' is `T', detect direct children."
   (declare (type path sub))
   (some (lambda (d) (subpath-p d sub)) dirs))
 
+
+;; -------------------------------------------------------------------------- ;;
 
 (defun get-paths-roots (paths)
   (declare (type list-of-paths paths))
