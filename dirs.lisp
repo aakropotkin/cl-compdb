@@ -249,28 +249,20 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-;(defun direct-subpath-p (dir sub)
-;  (declare (type dirpath dir))
-;  (declare (type path sub))
-;  (let ((dpath ()))
-;    (uiop:sub)))
-
-
 (defun subpath-p (dir sub &key (direct NIL))
   "Is `sub' a subdirectory of `dir'?
 When `direct' is `T', detect direct children."
   (declare (type dirpath  dir))
   (declare (type path sub))
   (declare (type boolean  direct))
-  (let (()))
-  (cond
-    ((and direct (null (pathname-name sub)))
-     (pathname-match-p sub (merge-pathnames (parse-dir-namestring "*/") dir)))
-    ;; Is `sub' a file in `dir'?
-    (direct (equal (simplify-directory-component (as-directory-component dir))
-                   (simplify-directory-component (as-directory-component sub))))
-    ;; Is `sub' a file or directory in the subtree of `dir'?
-    (T (pathname-match-p sub (uiop:wilden (as-pathname dir))))))
+  (let ((pdir (simplify-path (as-pathname dir)))
+        (psub (simplify-path (as-pathname sub))))
+    (if direct
+        (if (null (pathname-name psub))
+            (pathname-match-p psub (merge-pathnames (parse-dir-namestring "*/")
+                                                    pdir))
+            (equal (pathname-directory pdir) (pathname-directory psub)))
+        (pathname-match-p psub (uiop:wilden pdir)))))
 
 
 ;; -------------------------------------------------------------------------- ;;

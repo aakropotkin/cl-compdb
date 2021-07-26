@@ -7,8 +7,7 @@
    #:test-directory-component-t
    #:test-list-of-directory-components-t
    #:test-directory-pathname-t
-   #:test-list-of-directory-pathnames-t
-   #:test-dirpath-t
+   #:test-list-of-directory-pathnames-t #:test-dirpath-t
    #:test-list-of-dirpaths-t
    #:test-path-t
    #:test-list-of-paths-t
@@ -19,6 +18,7 @@
    #:test-join-pathnames
    #:test-parse-dir-namestring
    #:test-subpath-p
+   #:test-any-subpath-p
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -202,8 +202,7 @@
       (ok (subpath-p dir5 (as-pathname dir7)))
       (ok (subpath-p dir5 (as-pathname dir8)))
       (ok (subpath-p dir6 (as-pathname dir8)))
-      (ok (not (subpath-p dir6 (as-pathname dir7))))  ; FIXME
-      )))
+      (ok (subpath-p dir6 (as-pathname dir7))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -218,18 +217,17 @@
           (dir6 (list :RELATIVE "baz" "bakk" :UP))
           (dir7 (list :RELATIVE "baz" "bakk" :BACK "billy"))
           (dir8 (list :RELATIVE "baz" "bakk" :UP "sally")))
-      (ok (subpath-p (list dir1) (as-pathname dir2)))
-      (ok (not (subpath-p (list dir1) (as-pathname dir3))))
-      (ok (not (subpath-p (list dir1) (as-pathname dir4))))
-      (ok (subpath-p (list dir3) (as-pathname dir5)))  ; FIXME
-      (ok (subpath-p (list dir3) (as-pathname dir6)))  ; FIXME
-      (ok (subpath-p (list dir3) (as-pathname dir7)))
-      (ok (subpath-p (list dir3) (as-pathname dir8)))
-      (ok (subpath-p (list dir5) (as-pathname dir7)))
-      (ok (subpath-p (list dir5) (as-pathname dir8)))
-      (ok (subpath-p (list dir6) (as-pathname dir8)))
-      (ok (not (subpath-p (list dir6) (as-pathname dir7))))  ; FIXME
-      )))
+      (ok (any-subpath-p (list dir1) (as-pathname dir2)))
+      (ok (not (any-subpath-p (list dir1) (as-pathname dir3))))
+      (ok (not (any-subpath-p (list dir1) (as-pathname dir4))))
+      (ok (any-subpath-p (list dir3) (as-pathname dir5)))  ; FIXME
+      (ok (any-subpath-p (list dir3) (as-pathname dir6)))  ; FIXME
+      (ok (any-subpath-p (list dir3) (as-pathname dir7)))
+      (ok (any-subpath-p (list dir3) (as-pathname dir8)))
+      (ok (any-subpath-p (list dir5) (as-pathname dir7)))
+      (ok (any-subpath-p (list dir5) (as-pathname dir8)))
+      (ok (any-subpath-p (list dir6) (as-pathname dir8)))
+      (ok (any-subpath-p (list dir6) (as-pathname dir7))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -249,7 +247,8 @@
   (test-simplify-path)
   (test-join-pathnames)
   (test-parse-dir-namestring)
-  (test-subpath-p))
+  (test-subpath-p)
+  (test-any-subpath-p))
 
 
 ;; -------------------------------------------------------------------------- ;;
