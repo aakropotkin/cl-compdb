@@ -233,10 +233,14 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-;; FIXME
 (defun test-get-paths-roots ()
   (subtest "Test `get-paths-roots' function."
-    (ok T)))
+    (let ((p1 #P"foo/bar/baz")
+          (p2 #P"foo/bar/quux")
+          (p3 #P"a/b/c")
+          (p4 #P"a/b/d"))
+      (ok (equal (list #P"foo/bar/" #P"a/b/")
+                 (get-paths-roots (list p1 p2 p3 p4)))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
