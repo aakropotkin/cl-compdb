@@ -255,16 +255,18 @@ When `direct' is `T', detect direct children."
   (declare (type dirpath  dir))
   (declare (type path sub))
   (declare (type boolean  direct))
-  (let ((pdir (simplify-path (as-pathname dir)))
-        (psub (simplify-path (as-pathname sub))))
-    (and (not (equal pdir psub))
-         (if direct
-             (if (null (pathname-name psub))
-                 (pathname-match-p psub (merge-pathnames
-                                         (parse-dir-namestring "*/")
-                                         pdir))
-                 (equal (pathname-directory pdir) (pathname-directory psub)))
-             (pathname-match-p psub (uiop:wilden pdir))))))
+  (the boolean
+       (let ((pdir (simplify-path (as-pathname dir)))
+             (psub (simplify-path (as-pathname sub))))
+         (and (not (equal pdir psub))
+              (if direct
+                  (if (null (pathname-name psub))
+                      (pathname-match-p psub (merge-pathnames
+                                              (parse-dir-namestring "*/")
+                                              pdir))
+                      (equal (pathname-directory pdir)
+                             (pathname-directory psub)))
+                  (pathname-match-p psub (uiop:wilden pdir)))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -272,7 +274,7 @@ When `direct' is `T', detect direct children."
 (defun any-subpath-p (dirs sub)
   (declare (type list-of-dirpaths dirs))
   (declare (type path sub))
-  (some (lambda (d) (subpath-p d sub)) dirs))
+  (the boolean (some (lambda (d) (subpath-p d sub)) dirs)))
 
 
 ;; -------------------------------------------------------------------------- ;;
