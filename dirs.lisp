@@ -185,7 +185,7 @@
   (the directory-component
        (etypecase x
          (pathname            (pathname-directory x))
-         (string              (pathname-directory (parse-namestring x)))
+         (string              (pathname-directory (parse-dir-namestring x)))
          (directory-component x))))
 
 
@@ -194,8 +194,8 @@
 (defun simplify-directory-component (dc)
   (declare (type directory-component dc))
   (the directory-component
-       (as-directory-component
-        (as-pathname (directory-component-ups-as-backs dc)))))
+       (pathname-directory
+        (make-pathname :DIRECTORY (directory-component-ups-as-backs dc)))))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -257,12 +257,14 @@ When `direct' is `T', detect direct children."
   (declare (type boolean  direct))
   (let ((pdir (simplify-path (as-pathname dir)))
         (psub (simplify-path (as-pathname sub))))
-    (if direct
-        (if (null (pathname-name psub))
-            (pathname-match-p psub (merge-pathnames (parse-dir-namestring "*/")
-                                                    pdir))
-            (equal (pathname-directory pdir) (pathname-directory psub)))
-        (pathname-match-p psub (uiop:wilden pdir)))))
+    (and (not (equal pdir psub))
+         (if direct
+             (if (null (pathname-name psub))
+                 (pathname-match-p psub (merge-pathnames
+                                         (parse-dir-namestring "*/")
+                                         pdir))
+                 (equal (pathname-directory pdir) (pathname-directory psub)))
+             (pathname-match-p psub (uiop:wilden pdir))))))
 
 
 ;; -------------------------------------------------------------------------- ;;

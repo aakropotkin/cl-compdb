@@ -19,6 +19,7 @@
    #:test-parse-dir-namestring
    #:test-subpath-p
    #:test-any-subpath-p
+   #:test-get-paths-roots
    #:run-test-dirs))
 (in-package :compdb/test/test-dirs)
 
@@ -195,8 +196,8 @@
       (ok (subpath-p dir1 (as-pathname dir2)))
       (ok (not (subpath-p dir1 (as-pathname dir3))))
       (ok (not (subpath-p dir1 (as-pathname dir4))))
-      (ok (subpath-p dir3 (as-pathname dir5)))  ; FIXME
-      (ok (subpath-p dir3 (as-pathname dir6)))  ; FIXME
+      (ok (not (subpath-p dir3 (as-pathname dir5))))
+      (ok (not (subpath-p dir3 (as-pathname dir6))))
       (ok (subpath-p dir3 (as-pathname dir7)))
       (ok (subpath-p dir3 (as-pathname dir8)))
       (ok (subpath-p dir5 (as-pathname dir7)))
@@ -220,14 +221,22 @@
       (ok (any-subpath-p (list dir1) (as-pathname dir2)))
       (ok (not (any-subpath-p (list dir1) (as-pathname dir3))))
       (ok (not (any-subpath-p (list dir1) (as-pathname dir4))))
-      (ok (any-subpath-p (list dir3) (as-pathname dir5)))  ; FIXME
-      (ok (any-subpath-p (list dir3) (as-pathname dir6)))  ; FIXME
+      (ok (not (any-subpath-p (list dir3) (as-pathname dir5))))
+      (ok (not (any-subpath-p (list dir3) (as-pathname dir6))))
       (ok (any-subpath-p (list dir3) (as-pathname dir7)))
       (ok (any-subpath-p (list dir3) (as-pathname dir8)))
       (ok (any-subpath-p (list dir5) (as-pathname dir7)))
       (ok (any-subpath-p (list dir5) (as-pathname dir8)))
       (ok (any-subpath-p (list dir6) (as-pathname dir8)))
       (ok (any-subpath-p (list dir6) (as-pathname dir7))))))
+
+
+;; -------------------------------------------------------------------------- ;;
+
+;; FIXME
+(defun test-get-paths-roots ()
+  (subtest "Test `get-paths-roots' function."
+    (ok T)))
 
 
 ;; -------------------------------------------------------------------------- ;;
@@ -248,7 +257,8 @@
   (test-join-pathnames)
   (test-parse-dir-namestring)
   (test-subpath-p)
-  (test-any-subpath-p))
+  (test-any-subpath-p)
+  (test-get-paths-roots))
 
 
 ;; -------------------------------------------------------------------------- ;;
