@@ -63,7 +63,7 @@
 
 (defun test-list-of-lang-tags-t ()
   (subtest "Test `list-of-lang-tag' type."
-    T))
+    (is-type (list :CC :CXX :YACC :LEX :OTHER) 'list-of-lang-tags)))
 
 
 ;; -------------------------------------------------------------------------- ;;
