@@ -14,8 +14,7 @@
    #:list-of-lang-tags-p
    #:list-of-lang-tags
    #:lang-tag-from-flags
-   #:lang-tag-from-compiler
-   ))
+   #:lang-tag-from-compiler))
 
 (in-package :compdb/lang-tag)
 
@@ -40,7 +39,7 @@
 
 ;; -------------------------------------------------------------------------- ;;
 
-(defun gen-lang-p (ltag)
+(defun gen-lang-tag-p (x)
   (member x (list :YACC :LEX)))
 
 (deftype gen-lang-tag ()
