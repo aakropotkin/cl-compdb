@@ -70,14 +70,25 @@
 
 (defun test-lang-tag-from-flags ()
   (subtest "Test `lang-tag-from-flags' function."
-    T))
+    (is :CXX (lang-tag-from-flags (list "foo" "-x" "c++")))
+    (is :CC (lang-tag-from-flags (list "foo" "-x" "c")))
+    (ok (null (lang-tag-from-flags (list "foo" "bar"))))))
 
 
 ;; -------------------------------------------------------------------------- ;;
 
 (defun test-lang-tag-from-compiler ()
   (subtest "Test `lang-tag-from-compiler' function."
-    T))
+    (is :CC (lang-tag-from-compiler "gcc"))
+    (is :CC (lang-tag-from-compiler "cc"))
+    (is :CC (lang-tag-from-compiler "icc"))
+    (is :CC (lang-tag-from-compiler "clang"))
+    (is :CXX (lang-tag-from-compiler "g++"))
+    (is :CXX (lang-tag-from-compiler "clang++"))
+    (is :YACC (lang-tag-from-compiler "yacc"))
+    (is :YACC (lang-tag-from-compiler "bison"))
+    (is :LEX (lang-tag-from-compiler "lex"))
+    (is :LEX (lang-tag-from-compiler "flex"))))
 
 
 ;; -------------------------------------------------------------------------- ;;

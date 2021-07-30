@@ -59,7 +59,7 @@
 ;; -------------------------------------------------------------------------- ;;
 
 (defun lang-tag-from-flags (flags)
-  (declare (type list-of-flags flags))
+  (declare (type list-of-strings flags))
   (let ((fl (cadr (member "-x" flags :TEST #'equal))))
     (cond ((null fl) NIL)
           ((equal fl "c++") :CXX)
